@@ -8,6 +8,7 @@
     --secondary: #bd89d2;
     --accent: #a63f97;
     --green: #00b069;
+    --font-secular: 'Secular One', sans-serif;
 }
 
 :root[data-theme="dark"] {
@@ -17,6 +18,7 @@
     --secondary: #632d78;
     --accent: #c05ab1;
     --green: #00b069;
+    --font-secular: 'Secular One', sans-serif;
 }
 
 body {
@@ -82,13 +84,13 @@ small {
 
 .particle-container {
     position: absolute;
-    top: 0;
+    top: 10vh; /* Adjusted top position */
     left: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    pointer-events: none; /* Ensure particles don't interfere with clicks */
-    z-index: 10;
+    pointer-events: none;
+    z-index: 20;
 }
 
 .particle {
@@ -101,13 +103,16 @@ small {
 @keyframes float {
     0% {
         transform: translateY(0) translateX(0);
-        opacity: 0;
+        opacity: 0; /* Start invisible */
     }
-    50% {
-        opacity: 1;
+    25% {
+        opacity: 1; /* Fade in */
+    }
+    75% {
+        opacity: 1; /* Keep visible */
     }
     100% {
         transform: translateY(-100vh) translateX(25vw);
-        opacity: 0;
+        opacity: 0; /* Fade out and move */
     }
 }
