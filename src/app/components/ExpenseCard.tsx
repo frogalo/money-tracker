@@ -15,7 +15,7 @@ interface Expense {
     amount: number;
     currency: string;
     date: string;
-    origin?: string;             // optional origin
+    origin?: string;
     linkedIncomeId?: number;
 }
 

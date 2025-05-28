@@ -14,6 +14,7 @@
 :root[data-theme="dark"] {
     --text: #dcedf2;
     --background: #041010;
+    --input-background: #184b4b;
     --primary: #9ecbda;
     --secondary: #632d78;
     --accent: #c05ab1;
