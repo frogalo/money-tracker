@@ -1,20 +1,40 @@
-'use client'; // Ensure this is at the top if it's a client component
+'use client';
 
 import React, {useState} from 'react';
-import {LucideIcon, ChevronDown, ChevronUp} from 'lucide-react';
+import {
+    LucideIcon,
+    ChevronDown,
+    ChevronUp,
+    RotateCcw
+} from 'lucide-react';
 
 interface Expense {
     id: number;
     category: string;
     description: string;
     amount: number;
+    currency: string;
     date: string;
+    origin?: string;             // optional origin
+    linkedIncomeId?: number;
 }
 
-interface CardProps {
+interface Income {
+    id: number;
+    source: string;
+    amount: number;
+    currency?: string;
+    type: 'salary' | 'investment' | 'transfer' | 'other' | 'return';
+    date: string;
+    linkedExpenseId?: number;
+    returnPercentage?: number;
+}
+
+interface ExpenseCardProps {
     title: string;
     icon: LucideIcon;
     expenses: Expense[];
+    incomes: Income[];
     color: string;
     total: number;
     percentage: number;
@@ -23,126 +43,240 @@ interface CardProps {
 interface GroupedExpense {
     description: string;
     totalAmount: number;
+    currency: string;
     count: number;
     latestDate: string;
+    transactions: Expense[];
 }
 
-const ExpenseCard: React.FC<CardProps> = ({
-                                              title,
-                                              icon: Icon,
-                                              expenses,
-                                              color,
-                                              total,
-                                              percentage
-                                          }) => {
+// helper to format currency
+const formatCurrency = (amt: number, curr?: string) => {
+    if (curr === 'USD') return `$${amt}`;
+    if (curr === 'PLN') return `${amt} zł`;
+    return curr ? `${amt} ${curr}` : `${amt}`;
+};
+
+const ExpenseCard: React.FC<ExpenseCardProps> = ({
+                                                     title,
+                                                     icon: Icon,
+                                                     expenses,
+                                                     incomes,
+                                                     color,
+                                                     total,
+                                                     percentage
+                                                 }) => {
     const [showAll, setShowAll] = useState(false);
-
-    // Group expenses by description
-    const groupedExpenses = expenses.reduce((acc: { [key: string]: GroupedExpense }, expense) => {
-        if (acc[expense.description]) {
-            acc[expense.description].totalAmount += expense.amount;
-            acc[expense.description].count += 1;
-            // Keep the latest date
-            if (new Date(expense.date) > new Date(acc[expense.description].latestDate)) {
-                acc[expense.description].latestDate = expense.date;
-            }
-        } else {
-            acc[expense.description] = {
-                description: expense.description,
-                totalAmount: expense.amount,
-                count: 1,
-                latestDate: expense.date
-            };
-        }
-        return acc;
-    }, {});
-
-    const groupedExpensesArray = Object.values(groupedExpenses);
-    const displayedExpenses = showAll ? groupedExpensesArray : groupedExpensesArray.slice(0, 5);
-    const hasMoreThan5 = groupedExpensesArray.length > 5;
+    const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+    const [btnHover, setBtnHover] = useState(false);
 
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+        const d = new Date(dateString);
+        return d.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+        });
     };
 
+    const toggleExpanded = (desc: string) => {
+        const s = new Set(expandedItems);
+        if (s.has(desc)) {
+            s.delete(desc);
+        } else {
+            s.add(desc);
+        }
+        setExpandedItems(s);
+    };
+
+    const getLinkedIncome = (expId: number): Income | undefined =>
+        incomes.find((i) => i.linkedExpenseId === expId);
+
+    // group by description
+    const grouped = expenses.reduce(
+        (acc: { [k: string]: GroupedExpense }, e) => {
+            if (acc[e.description]) {
+                acc[e.description].totalAmount += e.amount;
+                acc[e.description].transactions.push(e);
+                acc[e.description].count++;
+                if (new Date(e.date) > new Date(acc[e.description].latestDate)) {
+                    acc[e.description].latestDate = e.date;
+                }
+            } else {
+                acc[e.description] = {
+                    description: e.description,
+                    totalAmount: e.amount,
+                    currency: e.currency,
+                    count: 1,
+                    latestDate: e.date,
+                    transactions: [e]
+                };
+            }
+            return acc;
+        },
+        {}
+    );
+
+    const groups = Object.values(grouped);
+    const shown = showAll ? groups : groups.slice(0, 5);
+
     return (
-        <div // Added 'group' and 'relative' to the main card container
-            className="relative group rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2"
+        <div
+            className="rounded-2xl p-6 shadow-xl border-2 flex flex-col h-full overflow-hidden relative group"
             style={{
                 background: 'var(--background)',
                 borderColor: color,
                 color: 'var(--text)'
             }}
         >
-            {/* The total amount div, now absolutely positioned and hover-only */}
-            <div
-                className="absolute z-10 px-4 py-2 rounded-full text-lg font-bold
-               opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                    background: color,
-                    color: 'var(--background)',
-                    top: '-10px',
-                    right: '-10px'
-                }}
-            >
-                ${total}
-            </div>
-
-            {/* Title and Icon section (no longer needs justify-between here) */}
-            <div className="flex items-center mb-6">
+            <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold flex items-center gap-3" style={{color}}>
-                    <div className="p-2 rounded-lg flex items-center gap-2"
-                         style={{background: color, color: 'var(--background)'}}>
+                    <div
+                        className="p-2 rounded-lg"
+                        style={{background: color, color: 'var(--background)'}}
+                    >
                         <Icon className="w-6 h-6"/>
                     </div>
                     {title}
                 </h2>
+                <div
+                    className="px-4 py-4 rounded-full text-lg font-bold absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                    style={{
+                        background: color,
+                        color: 'var(--background)',
+                        top: '-12px',
+                        right: '-14px',
+                        zIndex: 10
+                    }}
+                >
+                    {formatCurrency(total, expenses[0]?.currency)}
+                </div>
             </div>
 
+            {/* stat bar */}
+            <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm opacity-70">{percentage.toFixed(1)}% of total</span>
+                    <span className="text-sm opacity-70">{expenses.length} txns</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2" style={{background: `${color}20`}}>
+                    <div className="h-2 rounded-full" style={{width: `${percentage}%`, background: color}}/>
+                </div>
+            </div>
+
+            {/* list */}
             <div className="space-y-3 flex-grow overflow-y-auto pr-2 custom-scrollbar">
-                {groupedExpensesArray.length > 0 ? (
+                {groups.length ? (
                     <>
-                        {displayedExpenses.map((expense, index) => (
-                            <div
-                                key={`${expense.description}-${index}`}
-                                className="flex justify-between items-center p-4 rounded-lg hover:shadow-md transition-all duration-200"
-                                style={{
-                                    background: `${color}10`,
-                                    border: `1px solid ${color}20`
-                                }}
-                            >
-                                <div className="flex flex-col">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium">{expense.description}</span>
-                                        {expense.count > 1 && (
-                                            <span
-                                                className="text-xs px-2 py-1 rounded-full font-bold"
-                                                style={{background: color, color: 'var(--background)'}}
-                                            >
-                                                x{expense.count}
-                                            </span>
+                        {shown.map((g, i) => (
+                            <div key={i}>
+                                <div
+                                    className="flex justify-between items-center p-4 rounded-lg hover:shadow-md transition-all duration-200"
+                                    onClick={() => g.count > 1 && toggleExpanded(g.description)}
+                                    style={{
+                                        background: `${color}10`,
+                                        border: `1px solid ${color}20`,
+                                        cursor: g.count > 1 ? 'pointer' : 'default'
+                                    }}
+                                >
+                                    <div className="flex flex-col flex-1">
+                                        <div className="flex items-center gap-2">
+                                            {g.count > 1 && (
+                                                <span
+                                                    className="text-xs px-2 py-1 rounded-full font-bold"
+                                                    style={{background: color, color: 'var(--background)'}}
+                                                >
+        x{g.count}
+      </span>
+                                            )}
+                                            <span className="font-medium">{g.description}</span>
+                                        </div>
+                                        {g.count === 1 && (
+                                            <div className="flex items-center gap-2 mt-1">
+      <span className="text-xs opacity-60">
+        {formatDate(g.latestDate)}
+      </span>
+                                                {g.transactions[0].origin &&
+                                                    g.transactions[0].origin !== g.description && (
+                                                        <span className="text-xs" style={{color}}>
+            {g.transactions[0].origin}
+          </span>
+                                                    )}
+                                            </div>
                                         )}
                                     </div>
-                                    {expense.count === 1 && (
-                                        <span className="text-xs opacity-60">
-                                            {formatDate(expense.latestDate)}
-                                        </span>
-                                    )}
+                                    <span className="font-bold text-lg" style={{color}}>
+                    {formatCurrency(g.totalAmount, g.currency)}
+                  </span>
                                 </div>
-                                <span className="font-bold text-lg" style={{color}}>
-                                    ${expense.totalAmount}
-                                </span>
+
+                                {g.count > 1 && expandedItems.has(g.description) && (
+                                    <div className="ml-6 mt-2 space-y-2">
+                                        {g.transactions
+                                            .sort((a, b) => +new Date(b.date) - +new Date(a.date))
+                                            .map((tr) => {
+                                                const li = getLinkedIncome(tr.id);
+                                                return (
+                                                    <div
+                                                        key={tr.id}
+                                                        className="flex justify-between items-center p-3 rounded-lg"
+                                                        style={{
+                                                            background: `${color}05`,
+                                                            border: `1px solid ${color}15`
+                                                        }}
+                                                    >
+                                                        <div className="flex flex-col flex-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <span
+                                                                    className="text-sm font-medium">{tr.description}</span>
+                                                                {li && (
+                                                                    <RotateCcw
+                                                                        className="w-4 h-4"
+                                                                        style={{color}}
+                                                                        aria-label="Return"
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                          <span className="text-xs opacity-60">
+                                                                            {formatDate(tr.date)}
+                                                                          </span>
+                                                                {tr.origin && (
+                                                                    <span className="text-xs" style={{color}}>
+                                                                      {tr.origin}
+                                                                    </span>
+
+                                                                )}
+
+                                                                {li && (
+                                                                    <span className="text-xs opacity-60">
+                                                                            returned by{' '}
+                                                                        <span style={{color}}>
+                                                                            {li.source}
+                                                                          </span>
+                                                                        </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <span className="font-bold" style={{color}}>
+                              {formatCurrency(tr.amount, tr.currency)}
+                            </span>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                )}
                             </div>
                         ))}
 
-                        {hasMoreThan5 && (
+                        {groups.length > 5 && (
                             <button
                                 onClick={() => setShowAll(!showAll)}
-                                className="w-full p-3 rounded-lg border-2 border-dashed transition-all duration-200 hover:shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                                onMouseEnter={() => setBtnHover(true)}
+                                onMouseLeave={() => setBtnHover(false)}
+                                className="w-full p-3 rounded-lg border-2 border-dashed transition duration-200 hover:shadow-md flex items-center justify-center gap-2 cursor-pointer"
                                 style={{
                                     borderColor: color,
-                                    color: color
+                                    color: color,
+                                    background: btnHover ? `${color}20` : 'transparent'
                                 }}
                             >
                                 {showAll ? (
@@ -153,7 +287,7 @@ const ExpenseCard: React.FC<CardProps> = ({
                                 ) : (
                                     <>
                                         <ChevronDown className="w-4 h-4"/>
-                                        Show {groupedExpensesArray.length - 5} More
+                                        Show {groups.length - 5} More
                                     </>
                                 )}
                             </button>
@@ -161,22 +295,10 @@ const ExpenseCard: React.FC<CardProps> = ({
                     </>
                 ) : (
                     <div className="text-center py-8 opacity-60">
-                        <p>No expenses yet</p>
-                        <p className="text-sm">Add your first {title.toLowerCase()} expense!</p>
+                        <p>No expenses</p>
+                        <p className="text-sm">Start tracking!</p>
                     </div>
                 )}
-            </div>
-
-            <div className="mt-6 pt-4" style={{borderTop: `2px solid ${color}30`}}>
-                <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold">Total:</span>
-                    <span className="text-2xl font-bold" style={{color}}>
-                        ${total}
-                    </span>
-                </div>
-                <div className="text-sm opacity-70 mt-1">
-                    {percentage.toFixed(1)}% of total expenses
-                </div>
             </div>
         </div>
     );

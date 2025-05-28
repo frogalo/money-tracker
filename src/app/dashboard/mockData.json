@@ -1,0 +1,359 @@
+{
+  "expenses": [
+    {
+      "id": 1,
+      "category": "Survival",
+      "description": "Rent",
+      "amount": 1500,
+      "currency": "PLN",
+      "origin": "ACME Properties",
+      "date": "2024-01-01"
+    },
+    {
+      "id": 2,
+      "category": "Groceries",
+      "description": "Walmart",
+      "amount": 150,
+      "currency": "PLN",
+      "origin": "Walmart",
+      "date": "2024-01-02",
+      "linkedIncomeId": 7
+    },
+    {
+      "id": 3,
+      "category": "Groceries",
+      "description": "Walmart",
+      "amount": 120,
+      "currency": "PLN",
+      "date": "2024-01-09"
+    },
+    {
+      "id": 4,
+      "category": "Groceries",
+      "description": "Walmart",
+      "amount": 180,
+      "currency": "PLN",
+      "origin": "Walmart",
+      "date": "2024-01-16",
+      "linkedIncomeId": 8
+    },
+    {
+      "id": 5,
+      "category": "Survival",
+      "description": "Utilities",
+      "amount": 200,
+      "currency": "PLN",
+      "origin": "City Energy Co.",
+      "date": "2024-01-03"
+    },
+    {
+      "id": 6,
+      "category": "Restaurants",
+      "description": "McDonalds",
+      "amount": 15,
+      "currency": "PLN",
+      "origin": "McDonalds",
+      "date": "2024-01-04"
+    },
+    {
+      "id": 7,
+      "category": "Restaurants",
+      "description": "McDonalds",
+      "amount": 12,
+      "currency": "PLN",
+      "date": "2024-01-08"
+    },
+    {
+      "id": 8,
+      "category": "Restaurants",
+      "description": "McDonalds",
+      "amount": 18,
+      "currency": "PLN",
+      "date": "2024-01-12"
+    },
+    {
+      "id": 9,
+      "category": "Restaurants",
+      "description": "McDonalds",
+      "amount": 14,
+      "currency": "PLN",
+      "date": "2024-01-18"
+    },
+    {
+      "id": 10,
+      "category": "Restaurants",
+      "description": "McDonalds",
+      "amount": 16,
+      "currency": "PLN",
+      "date": "2024-01-22"
+    },
+    {
+      "id": 11,
+      "category": "Fun",
+      "description": "Movies",
+      "amount": 25,
+      "currency": "PLN",
+      "origin": "Cinema City",
+      "date": "2024-01-05"
+    },
+    {
+      "id": 17,
+      "category": "Fun",
+      "description": "Movies",
+      "amount": 25,
+      "currency": "PLN",
+      "date": "2024-01-15"
+    },
+    {
+      "id": 18,
+      "category": "Fun",
+      "description": "Game",
+      "amount": 25,
+      "currency": "PLN",
+      "date": "2024-01-05"
+    },
+    {
+      "id": 28,
+      "category": "Fun",
+      "description": "Concert Tickets",
+      "amount": 80,
+      "currency": "PLN",
+      "origin": "LiveNation",
+      "date": "2024-01-20",
+      "linkedIncomeId": 9
+    },
+    {
+      "id": 38,
+      "category": "Fun",
+      "description": "Game3",
+      "amount": 25,
+      "currency": "PLN",
+      "date": "2024-01-25"
+    },
+    {
+      "id": 48,
+      "category": "Fun",
+      "description": "Game4",
+      "amount": 25,
+      "currency": "PLN",
+      "date": "2024-01-28"
+    },
+    {
+      "id": 58,
+      "category": "Fun",
+      "description": "Game5",
+      "amount": 25,
+      "currency": "PLN",
+      "date": "2024-01-30"
+    },
+    {
+      "id": 12,
+      "category": "Growth",
+      "description": "Stocks",
+      "amount": 500,
+      "currency": "PLN",
+      "origin": "Investor Broker",
+      "date": "2024-01-06"
+    },
+    {
+      "id": 13,
+      "category": "Growth",
+      "description": "Online Course",
+      "amount": 100,
+      "currency": "PLN",
+      "origin": "Udemy",
+      "date": "2024-01-07"
+    },
+    {
+      "id": 14,
+      "category": "Mobility",
+      "description": "Gas",
+      "amount": 60,
+      "currency": "PLN",
+      "origin": "Shell",
+      "date": "2024-01-10"
+    },
+    {
+      "id": 15,
+      "category": "Mobility",
+      "description": "Gas",
+      "amount": 55,
+      "currency": "PLN",
+      "origin": "Orlen",
+      "date": "2024-01-17"
+    },
+    {
+      "id": 16,
+      "category": "Mobility",
+      "description": "Gas",
+      "amount": 65,
+      "currency": "PLN",
+      "origin": "BP",
+      "date": "2024-01-24"
+    },
+    {
+      "id": 19,
+      "category": "Mobility",
+      "description": "Uber",
+      "amount": 25,
+      "currency": "PLN",
+      "origin": "Uber2",
+      "date": "2024-01-11",
+      "linkedIncomeId": 10
+    },
+    {
+      "id": 29,
+      "category": "Mobility",
+      "description": "Parking",
+      "amount": 15,
+      "currency": "PLN",
+      "origin": "City Parking",
+      "date": "2024-01-14"
+    },
+    {
+      "id": 39,
+      "category": "Mobility",
+      "description": "Train Ticket",
+      "amount": 45,
+      "currency": "PLN",
+      "origin": "PKP Intercity",
+      "date": "2024-01-18"
+    },
+    {
+      "id": 49,
+      "category": "Mobility",
+      "description": "Car Maintenance",
+      "amount": 120,
+      "currency": "PLN",
+      "origin": "AutoService",
+      "date": "2024-01-26"
+    },
+    {
+      "id": 59,
+      "category": "Mobility",
+      "description": "Toll Fee",
+      "amount": 8,
+      "currency": "PLN",
+      "origin": "ViaToll",
+      "date": "2024-01-29"
+    }
+  ],
+  "incomes": [
+    {
+      "id": 1,
+      "source": "Monthly Salary",
+      "amount": 5000,
+      "currency": "PLN",
+      "origin": "ACME Corp",
+      "type": "salary",
+      "date": "2024-01-01"
+    },
+    {
+      "id": 2,
+      "source": "Stock Dividends",
+      "amount": 75,
+      "currency": "PLN",
+      "origin": "SuperBroker",
+      "type": "investment",
+      "date": "2024-01-15"
+    },
+    {
+      "id": 3,
+      "source": "Stock Dividends",
+      "amount": 75,
+      "currency": "PLN",
+      "origin": "SuperBroker",
+      "type": "investment",
+      "date": "2024-01-30"
+    },
+    {
+      "id": 4,
+      "source": "Freelance Project",
+      "amount": 400,
+      "currency": "PLN",
+      "origin": "RemoteClient",
+      "type": "other",
+      "date": "2024-01-10"
+    },
+    {
+      "id": 5,
+      "source": "Freelance Project",
+      "amount": 400,
+      "currency": "PLN",
+      "origin": "RemoteClient",
+      "type": "other",
+      "date": "2024-01-20"
+    },
+    {
+      "id": 6,
+      "source": "Bank Transfer",
+      "amount": 200,
+      "currency": "PLN",
+      "origin": "Home Bank",
+      "type": "transfer",
+      "date": "2024-01-05"
+    },
+    {
+      "id": 7,
+      "source": "Girlfriend",
+      "amount": 75,
+      "currency": "PLN",
+      "origin": "Alice",
+      "type": "return",
+      "date": "2024-01-03",
+      "linkedExpenseId": 2,
+      "returnPercentage": 50
+    },
+    {
+      "id": 8,
+      "source": "Roommate",
+      "amount": 60,
+      "currency": "PLN",
+      "origin": "Bob",
+      "type": "return",
+      "date": "2024-01-17",
+      "linkedExpenseId": 4,
+      "returnPercentage": 33
+    },
+    {
+      "id": 9,
+      "source": "Friend",
+      "amount": 40,
+      "currency": "PLN",
+      "origin": "Charlie",
+      "type": "return",
+      "date": "2024-01-21",
+      "linkedExpenseId": 28,
+      "returnPercentage": 50
+    },
+    {
+      "id": 10,
+      "source": "Colleague",
+      "amount": 12,
+      "currency": "PLN",
+      "origin": "David",
+      "type": "return",
+      "date": "2024-01-12",
+      "linkedExpenseId": 19,
+      "returnPercentage": 48
+    },
+    {
+      "id": 11,
+      "source": "Bonus Payment",
+      "amount": 800,
+      "currency": "PLN",
+      "origin": "ACME Corp",
+      "type": "salary",
+      "date": "2024-01-25"
+    },
+    {
+      "id": 12,
+      "source": "Tax Refund",
+      "amount": 350,
+      "currency": "PLN",
+      "origin": "Tax Office",
+      "type": "other",
+      "date": "2024-01-28"
+    }
+  ]
+}
