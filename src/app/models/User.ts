@@ -34,6 +34,9 @@ const UserSchema = new Schema({
     createdAt: {
         type: Date,
     },
+    //default currency
+    //incomes
+    //expenses
 });
 
 const User = models.User || model('User', UserSchema);

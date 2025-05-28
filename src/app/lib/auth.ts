@@ -1,5 +1,5 @@
 import GoogleProvider from "next-auth/providers/google";
-import type { NextAuthOptions } from "next-auth";
+import type {NextAuthOptions} from "next-auth";
 import dbConnect from "@/app/lib/mongodb";
 import User from "@/app/models/User";
 
@@ -12,9 +12,7 @@ declare module "next-auth" {
             image?: string | null;
         };
     }
-    interface User {
-        id: string;
-    }
+
 }
 
 export const authOptions: NextAuthOptions = {
@@ -25,16 +23,27 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        async signIn() {
+        async signIn({user}) {
             try {
                 await dbConnect();
+
+                const existingUser = await User.findOne({email: user.email});
+
+                if (!existingUser) {
+                    await User.create({
+                        email: user.email,
+                        name: user.name,
+                        image: user.image,
+                    });
+                }
+
                 return true;
             } catch (e) {
-                console.error("Mongoose user insert error:", e);
+                console.error("User creation error:", e);
                 return false;
             }
         },
-        async session({ session, token }) {
+        async session({session, token}) {
             if (session?.user && token?.id) {
                 if (typeof token.id === 'string') {
                     session.user.id = token.id;
@@ -44,9 +53,9 @@ export const authOptions: NextAuthOptions = {
             }
             return session;
         },
-        async jwt({ token }) {
+        async jwt({token}) {
             await dbConnect();
-            const userInDb = await User.findOne({ email: token.email });
+            const userInDb = await User.findOne({email: token.email});
             token.id = userInDb?._id?.toString() || '';
             return token;
         },
@@ -58,5 +67,4 @@ export const authOptions: NextAuthOptions = {
         strategy: "jwt",
     },
     secret: process.env.NEXTAUTH_SECRET,
-    // debug: process.env.NODE_ENV === "development",
 };
