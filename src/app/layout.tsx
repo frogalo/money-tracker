@@ -1,12 +1,14 @@
-// src/app/layout.tsx
 import './globals.css';
 import {Secular_One} from 'next/font/google';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import React from "react";
-import AuthProvider from "./providers/AuthProvider";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/app/lib/auth";
+import React from 'react';
+import AuthProvider from './providers/AuthProvider';
+import {getServerSession} from 'next-auth';
+import {authOptions} from '@/app/lib/auth';
+import {Toaster} from 'react-hot-toast';
+import {ThemeProvider} from 'next-themes';
+import {i18n} from "@/app/i18n/settings";
 
 const inter = Secular_One({
     subsets: ['latin'],
@@ -19,20 +21,34 @@ export const metadata = {
 };
 
 async function getUserSession() {
-    return await getServerSession(authOptions)
+    return await getServerSession(authOptions);
 }
 
-export default async function RootLayout({children,}: { children: React.ReactNode; }) {
-    const session = await getUserSession()
+
+
+export default async function RootLayout({
+                                             children,
+                                         }: {
+    children: React.ReactNode;
+}) {
+    const session = await getUserSession();
+    const preferredLanguage = i18n.defaultLocale;
+
     return (
-        <html lang="en" className="h-full" data-theme="dark">
+        <html lang={preferredLanguage} className="h-full" suppressHydrationWarning>
         <body className={`${inter.className} flex flex-col h-full`}>
         <AuthProvider session={session}>
-            <div className="mt-16">
-                <Header/>
-            </div>
-            <main className="flex-grow">{children}</main>
-            <Footer/>
+            <ThemeProvider
+                attribute="data-theme"
+                defaultTheme="dark"
+                enableSystem={false}
+                disableTransitionOnChange
+            >
+                <Toaster position="bottom-right" />
+                <Header />
+                <main className="flex-grow">{children}</main>
+                <Footer />
+            </ThemeProvider>
         </AuthProvider>
         </body>
         </html>

@@ -1,5 +1,160 @@
 {
   "greeting": "Witaj, świecie!",
   "login": "Zaloguj się",
-  "logout": "Wyloguj się"
+  "logout": "Wyloguj się",
+  "settings": {
+    "title": "Ustawienia",
+    "goBack": "Wróć",
+    "profile": {
+      "title": "Informacje",
+      "displayName": "Nazwa wyświetlana",
+      "displayNamePlaceholder": "Wprowadź swoją nazwę wyświetlaną",
+      "email": "E-mail",
+      "emailNote": "Adresu e-mail nie można zmienić",
+      "save": "Zapisz",
+      "saving": "Zapisywanie...",
+      "displayNameTooLong": "Nazwa wyświetlana musi mieć maksymalnie 100 znaków",
+      "displayNameSaved": "Nazwa wyświetlana została pomyślnie zapisana!"
+    },
+    "appearance": {
+      "title": "Wygląd",
+      "theme": "Motyw",
+      "light": "Jasny",
+      "dark": "Ciemny",
+      "language": "Język"
+    },
+    "preferences": {
+      "title": "Preferencje",
+      "defaultCurrency": "Domyślna waluta",
+      "dateFormat": "Format daty"
+    },
+    "notifications": {
+      "title": "Powiadomienia",
+      "push": "Powiadomienia push",
+      "email": "Powiadomienia e-mail",
+      "budgetAlerts": "Alerty budżetowe",
+      "monthlyBudgetLimit": "Miesięczny limit budżetu"
+    },
+    "privacy": {
+      "title": "Prywatność i bezpieczeństwo",
+      "dataRetention": "Okres przechowywania danych",
+      "exportData": "Eksportuj dane",
+      "deleteAccount": "Usuń konto",
+      "dataRetentionOptions": {
+        "6months": "6 miesięcy",
+        "1year": "1 rok",
+        "2years": "2 lata",
+        "forever": "Na zawsze"
+      }
+    },
+    "comingSoon": "WKRÓTCE",
+    "loading": "Ładowanie ustawień...",
+    "messages": {
+      "settingsUpdated": "Ustawienia zaktualizowane pomyślnie!",
+      "fetchError": "Nie udało się pobrać ustawień",
+      "updateError": "Nie udało się zaktualizować ustawień",
+      "exportStarted": "Eksport danych został rozpoczęty. Otrzymasz e-mail, gdy będzie gotowy.",
+      "deleteConfirm": "Czy na pewno chcesz usunąć swoje konto? Tej operacji nie można cofnąć.",
+      "deleteInitiated": "Rozpoczęto usuwanie konta."
+    },
+    "languages": {
+      "en": "Angielski",
+      "pl": "Polski",
+      "es": "Hiszpański",
+      "fr": "Francuski"
+    },
+    "currencies": {
+      "PLN": "PLN (zł)",
+      "USD": "USD ($)",
+      "EUR": "EUR (€)",
+      "GBP": "GBP (£)"
+    },
+    "dateFormats": {
+      "DD/MM/YYYY": "DD/MM/RRRR",
+      "MM/DD/YYYY": "MM/DD/RRRR",
+      "YYYY-MM-DD": "RRRR-MM-DD"
+    }
+  },
+  "expenseCard": {
+    "showLess": "Pokaż mniej",
+    "showMore": "Pokaż {{count}} więcej",
+    "noExpenses": "Brak wydatków",
+    "startTracking": "Rozpocznij śledzenie!",
+    "percentageOfTotal": "{{percentage}}% całości",
+    "transactions": "{{count}} transakcja",
+    "transactions_plural": "{{count}} transakcje",
+    "returnedBy": "zwrócone przez {{source}}"
+  },
+  "incomeCard": {
+    "for": "dla",
+    "returnLabel": "Zwrot",
+    "showLess": "Pokaż mniej",
+    "showMore": "Pokaż {{count}} więcej",
+    "noIncomeRecorded": "Brak zarejestrowanych przychodów",
+    "addIncomeSources": "Dodaj swoje źródła przychodów!",
+    "totalIncome": "Całkowity przychód",
+    "incomeAndEarnings": "Przychody i zarobki"
+  },
+  "dashboard": {
+    "title": "Pulpit",
+    "subtitle": "Oto Twoje podsumowanie finansowe na ten miesiąc",
+    "loading": "Ładowanie Twojego pulpitu...",
+    "defaultWelcome": "Witaj",
+    "welcome": "Witaj {{name}}!",
+    "monthlyOverview": "Oto Twoje podsumowanie finansowe na ten miesiąc",
+    "income": "Przychody",
+    "expenses": "Wydatki",
+    "balance": "Saldo",
+    "addTransaction": "Dodaj transakcję",
+    "viewAnalytics": "Wyświetl analizy",
+    "monthlyReport": "Raport miesięczny",
+    "financialHealth": "Stan finansów",
+    "monthlyBalance": "Saldo miesięczne",
+    "savingMoney": "Świetnie! Oszczędzasz pieniądze",
+    "spendingMore": "Wydajesz więcej niż zarabiasz",
+    "ofSpending": "wydatków",
+    "investedInFuture": "zainwestowano w przyszłość",
+    "onEntertainment": "na rozrywkę",
+    "categories": {
+      "survival": {
+        "title": "Potrzeby",
+        "description": "Mieszkanie, rachunki, ubezpieczenie"
+      },
+      "growth": {
+        "title": "Rozwój",
+        "description": "Inwestycje, edukacja, umiejętności, biznes"
+      },
+      "fun": {
+        "title": "Rozrywka",
+        "description": "Rozrywka, hobby, podróże"
+      },
+      "restaurants": {
+        "title": "Restauracje",
+        "description": "Jedzenie na mieście, dostawa jedzenia, kawiarnie"
+      },
+      "mobility": {
+        "title": "Transport",
+        "description": "Transport, samochód, paliwo, podróże"
+      },
+      "groceries": {
+        "title": "Sklepy",
+        "description": "Zakupy spożywcze, artykuły gospodarstwa domowego"
+      }
+    }
+  },
+  "categories": {
+    "survival": "Potrzeby",
+    "survival_description": "Mieszkanie, rachunki, ubezpieczenie",
+    "growth": "Rozwój",
+    "growth_description": "Inwestycje, edukacja, umiejętności, biznes",
+    "fun": "Rozrywka",
+    "fun_description": "Rozrywka, hobby, podróże",
+    "restaurants": "Restauracje",
+    "restaurants_description": "Jedzenie na mieście, dostawa jedzenia, kawiarnie",
+    "mobility": "Mobilność",
+    "mobility_description": "Transport, samochód, paliwo, podróże",
+    "groceries": "Zakupy spożywcze",
+    "groceries_description": "Zakupy spożywcze, artykuły gospodarstwa domowego"
+  },
+  "loading": "Ładowanie Twojego pulpitu..."
 }

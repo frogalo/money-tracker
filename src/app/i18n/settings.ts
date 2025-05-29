@@ -1,10 +1,11 @@
 export const i18n = {
     defaultLocale: 'en',
     locales: ['en', 'pl'],
-}
+} as const;
 
 export const defaultNS = 'translation';
-export function getOptions () {
+
+export function getOptions() {
     return {
         // debug: true,
         supportedLngs: i18n.locales,
@@ -12,9 +13,9 @@ export function getOptions () {
         defaultNS,
         ns: defaultNS,
         backend: {
-            loadPath: './locales/{{lng}}/{{ns}}.json'
-        }
-    }
+            loadPath: '/locales/{{lng}}/{{ns}}.json',
+        },
+    };
 }
 
-export type Locale = (typeof i18n)['locales'][number]
+export type Locale = (typeof i18n)['locales'][number];

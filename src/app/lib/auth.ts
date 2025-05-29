@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        async signIn({user}) {
+        async signIn({user, profile}) {
             try {
                 await dbConnect();
 
@@ -34,6 +34,7 @@ export const authOptions: NextAuthOptions = {
                         email: user.email,
                         name: user.name,
                         image: user.image,
+                        googleProfile: profile,
                     });
                 }
 

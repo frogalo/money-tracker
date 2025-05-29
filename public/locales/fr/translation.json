@@ -1,0 +1,150 @@
+{
+  "greeting": "Bonjour le monde !",
+  "login": "Se connecter",
+  "logout": "Se déconnecter",
+  "settings": {
+    "title": "Paramètres",
+    "goBack": "Retour",
+    "profile": {
+      "title": "Informations",
+      "displayName": "Nom d'affichage",
+      "displayNamePlaceholder": "Entrez votre nom d'affichage",
+      "email": "E-mail",
+      "emailNote": "L'e-mail ne peut pas être modifié",
+      "save": "Sauvegarder",
+      "saving": "Sauvegarde...",
+      "displayNameTooLong": "Le nom d'affichage doit contenir 100 caractères ou moins",
+      "displayNameSaved": "Nom d'affichage sauvegardé avec succès !"
+    },
+    "appearance": {
+      "title": "Apparence",
+      "theme": "Thème",
+      "light": "Clair",
+      "dark": "Sombre",
+      "language": "Langue"
+    },
+    "preferences": {
+      "title": "Préférences",
+      "defaultCurrency": "Devise par défaut",
+      "dateFormat": "Format de date"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "push": "Notifications push",
+      "email": "Notifications par e-mail",
+      "budgetAlerts": "Alertes budgétaires",
+      "monthlyBudgetLimit": "Limite de budget mensuel"
+    },
+    "privacy": {
+      "title": "Confidentialité et sécurité",
+      "dataRetention": "Période de rétention des données",
+      "exportData": "Exporter les données",
+      "deleteAccount": "Supprimer le compte",
+      "dataRetentionOptions": {
+        "6months": "6 mois",
+        "1year": "1 an",
+        "2years": "2 ans",
+        "forever": "Pour toujours"
+      }
+    },
+    "comingSoon": "PROCHAINEMENT",
+    "loading": "Chargement des paramètres...",
+    "messages": {
+      "settingsUpdated": "Paramètres mis à jour avec succès !",
+      "fetchError": "Échec de la récupération des paramètres",
+      "updateError": "Échec de la mise à jour des paramètres",
+      "exportStarted": "L'exportation des données a commencé. Vous recevrez un e-mail une fois prête.",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.",
+      "deleteInitiated": "Suppression du compte initiée."
+    },
+    "languages": {
+      "en": "Anglais",
+      "pl": "Polonais",
+      "es": "Espagnol",
+      "fr": "Français"
+    },
+    "currencies": {
+      "PLN": "PLN (zł)",
+      "USD": "USD ($)",
+      "EUR": "EUR (€)",
+      "GBP": "GBP (£)"
+    },
+    "dateFormats": {
+      "DD/MM/YYYY": "JJ/MM/AAAA",
+      "MM/DD/YYYY": "MM/JJ/AAAA",
+      "YYYY-MM-DD": "AAAA-MM-JJ"
+    }
+  },
+  "expenseCard": {
+    "showLess": "Afficher moins",
+    "showMore": "Afficher {{count}} de plus",
+    "noExpenses": "Pas de dépenses",
+    "startTracking": "Commencez le suivi !",
+    "percentageOfTotal": "{{percentage}}% du total",
+    "transactions": "{{count}} transaction",
+    "transactions_plural": "{{count}} transactions",
+    "returnedBy": "retourné par {{source}}"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "subtitle": "Voici votre aperçu financier pour ce mois",
+    "loading": "Chargement de votre tableau de bord...",
+    "defaultWelcome": "Bienvenue",
+    "welcome": "Bienvenue {{name}} !",
+    "monthlyOverview": "Voici votre aperçu financier pour ce mois",
+    "income": "Revenus",
+    "expenses": "Dépenses",
+    "balance": "Solde",
+    "addTransaction": "Ajouter une transaction",
+    "viewAnalytics": "Voir les analyses",
+    "monthlyReport": "Rapport mensuel",
+    "financialHealth": "Santé financière",
+    "monthlyBalance": "Solde mensuel",
+    "savingMoney": "Super ! Vous économisez de l'argent",
+    "spendingMore": "Vous dépensez plus que vous ne gagnez",
+    "ofSpending": "des dépenses",
+    "investedInFuture": "investi dans l'avenir",
+    "onEntertainment": "pour le divertissement",
+    "categories": {
+      "survival": {
+        "title": "Survie",
+        "description": "Logement, services publics, assurances"
+      },
+      "growth": {
+        "title": "Croissance",
+        "description": "Investissements, éducation, compétences, affaires"
+      },
+      "fun": {
+        "title": "Divertissement",
+        "description": "Divertissement, loisirs, voyages"
+      },
+      "restaurants": {
+        "title": "Restaurants",
+        "description": "Repas au restaurant, livraison de repas, cafés"
+      },
+      "mobility": {
+        "title": "Mobilité",
+        "description": "Transports, voiture, essence, voyages"
+      },
+      "groceries": {
+        "title": "Épicerie",
+        "description": "Achats de nourriture, articles ménagers"
+      }
+    }
+  },
+  "categories": {
+    "survival": "Survie",
+    "survival_description": "Logement, services publics, assurances",
+    "growth": "Croissance",
+    "growth_description": "Investissements, éducation, compétences, affaires",
+    "fun": "Divertissement",
+    "fun_description": "Divertissement, loisirs, voyages",
+    "restaurants": "Restaurants",
+    "restaurants_description": "Repas au restaurant, livraison de repas, cafés",
+    "mobility": "Mobilité",
+    "mobility_description": "Transports, voiture, essence, voyages",
+    "groceries": "Épicerie",
+    "groceries_description": "Achats de nourriture, articles ménagers"
+  },
+  "loading": "Chargement de votre tableau de bord..."
+}

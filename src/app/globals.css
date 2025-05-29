@@ -4,6 +4,8 @@
 :root[data-theme="light"] {
     --text: #0c1d22;
     --background: #f4f9fa;
+    --background-card: #afc8ce;
+    --input-background: #d1e7dc;
     --primary: #245160;
     --secondary: #bd89d2;
     --accent: #a63f97;
@@ -14,6 +16,7 @@
 :root[data-theme="dark"] {
     --text: #dcedf2;
     --background: #041010;
+    --background-card: #0f2323;
     --input-background: #184b4b;
     --primary: #9ecbda;
     --secondary: #632d78;

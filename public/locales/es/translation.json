@@ -1,0 +1,150 @@
+{
+  "greeting": "¡Hola, mundo!",
+  "login": "Iniciar sesión",
+  "logout": "Cerrar sesión",
+  "settings": {
+    "title": "Configuración",
+    "goBack": "Volver",
+    "profile": {
+      "title": "Información",
+      "displayName": "Nombre de usuario",
+      "displayNamePlaceholder": "Introduce tu nombre de usuario",
+      "email": "Correo electrónico",
+      "emailNote": "El correo electrónico no se puede cambiar",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "displayNameTooLong": "El nombre de usuario debe tener 100 caracteres o menos",
+      "displayNameSaved": "¡Nombre de usuario guardado exitosamente!"
+    },
+    "appearance": {
+      "title": "Apariencia",
+      "theme": "Tema",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "language": "Idioma"
+    },
+    "preferences": {
+      "title": "Preferencias",
+      "defaultCurrency": "Moneda predeterminada",
+      "dateFormat": "Formato de fecha"
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "push": "Notificaciones push",
+      "email": "Notificaciones por correo electrónico",
+      "budgetAlerts": "Alertas de presupuesto",
+      "monthlyBudgetLimit": "Límite de presupuesto mensual"
+    },
+    "privacy": {
+      "title": "Privacidad y seguridad",
+      "dataRetention": "Período de retención de datos",
+      "exportData": "Exportar datos",
+      "deleteAccount": "Eliminar cuenta",
+      "dataRetentionOptions": {
+        "6months": "6 meses",
+        "1year": "1 año",
+        "2years": "2 años",
+        "forever": "Para siempre"
+      }
+    },
+    "comingSoon": "PRÓXIMAMENTE",
+    "loading": "Cargando configuración...",
+    "messages": {
+      "settingsUpdated": "¡Configuración actualizada exitosamente!",
+      "fetchError": "Error al obtener la configuración",
+      "updateError": "Error al actualizar la configuración",
+      "exportStarted": "La exportación de datos ha comenzado. Recibirás un correo electrónico cuando esté lista.",
+      "deleteConfirm": "¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.",
+      "deleteInitiated": "Eliminación de cuenta iniciada."
+    },
+    "languages": {
+      "en": "Inglés",
+      "pl": "Polaco",
+      "es": "Español",
+      "fr": "Francés"
+    },
+    "currencies": {
+      "PLN": "PLN (zł)",
+      "USD": "USD ($)",
+      "EUR": "EUR (€)",
+      "GBP": "GBP (£)"
+    },
+    "dateFormats": {
+      "DD/MM/YYYY": "DD/MM/AAAA",
+      "MM/DD/YYYY": "MM/DD/AAAA",
+      "YYYY-MM-DD": "AAAA-MM-DD"
+    }
+  },
+  "expenseCard": {
+    "showLess": "Mostrar menos",
+    "showMore": "Mostrar {{count}} más",
+    "noExpenses": "No hay gastos",
+    "startTracking": "¡Empieza a registrar!",
+    "percentageOfTotal": "{{percentage}}% del total",
+    "transactions": "{{count}} transacción",
+    "transactions_plural": "{{count}} transacciones",
+    "returnedBy": "devuelto por {{source}}"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "subtitle": "Aquí tienes tu resumen financiero de este mes",
+    "loading": "Cargando tu panel...",
+    "defaultWelcome": "Bienvenido",
+    "welcome": "¡Bienvenido {{name}}!",
+    "monthlyOverview": "Aquí tienes tu resumen financiero de este mes",
+    "income": "Ingresos",
+    "expenses": "Gastos",
+    "balance": "Saldo",
+    "addTransaction": "Añadir transacción",
+    "viewAnalytics": "Ver análisis",
+    "monthlyReport": "Informe mensual",
+    "financialHealth": "Salud financiera",
+    "monthlyBalance": "Balance mensual",
+    "savingMoney": "¡Genial! Estás ahorrando dinero",
+    "spendingMore": "Estás gastando más de lo que ganas",
+    "ofSpending": "de gasto",
+    "investedInFuture": "invertido en el futuro",
+    "onEntertainment": "en entretenimiento",
+    "categories": {
+      "survival": {
+        "title": "Supervivencia",
+        "description": "Vivienda, servicios, seguros"
+      },
+      "growth": {
+        "title": "Crecimiento",
+        "description": "Inversiones, educación, habilidades, negocios"
+      },
+      "fun": {
+        "title": "Diversión",
+        "description": "Entretenimiento, hobbies, viajes"
+      },
+      "restaurants": {
+        "title": "Restaurantes",
+        "description": "Comer fuera, entrega de comida, cafeterías"
+      },
+      "mobility": {
+        "title": "Movilidad",
+        "description": "Transporte, coche, gasolina, viajes"
+      },
+      "groceries": {
+        "title": "Comestibles",
+        "description": "Compras de alimentos, artículos para el hogar"
+      }
+    }
+  },
+  "categories": {
+    "survival": "Supervivencia",
+    "survival_description": "Vivienda, servicios, seguros",
+    "growth": "Crecimiento",
+    "growth_description": "Inversiones, educación, habilidades, negocios",
+    "fun": "Diversión",
+    "fun_description": "Entretenimiento, hobbies, viajes",
+    "restaurants": "Restaurantes",
+    "restaurants_description": "Comer fuera, entrega de comida, cafeterías",
+    "mobility": "Movilidad",
+    "mobility_description": "Transporte, coche, gasolina, viajes",
+    "groceries": "Comestibles",
+    "groceries_description": "Compras de alimentos, artículos para el hogar"
+  },
+  "loading": "Cargando tu panel..."
+}

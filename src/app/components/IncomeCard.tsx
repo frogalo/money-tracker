@@ -1,51 +1,47 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     TrendingUp,
     ChevronDown,
     ChevronUp,
     ChevronRight,
-    RotateCcw
+    RotateCcw,
 } from 'lucide-react';
-import { Expense, Income } from '@/app/types';
+import {Expense, Income} from '@/app/types';
+import {TFunction} from 'i18next'; // Import TFunction type
 
 interface IncomeCardProps {
     incomes: Income[];
     expenses: Expense[];
     total: number;
+    // These props are now passed from DashboardPage
+    formatCurrency: (amount: number) => string; // The formatCurrency from DashboardPage doesn't take currency string as an argument for its internal calculation
+    formatDate: (dateString: string) => string;
+    t: TFunction; // The translation function from DashboardPage
 }
 
 interface GroupedIncome {
     source: string;
     totalAmount: number;
-    currency: string;
+    currency?: string; // currency can be optional as per your Income type
     count: number;
     latestDate: string;
     transactions: Income[];
 }
 
-const formatCurrency = (amt: number, curr?: string) => {
-    if (curr === 'USD') return `+$${amt}`;
-    if (curr === 'PLN') return `+${amt} zł`;
-    return curr ? `+${amt} ${curr}` : `+${amt}`;
-};
-
 const IncomeCard: React.FC<IncomeCardProps> = ({
                                                    incomes,
                                                    expenses,
-                                                   total
+                                                   total,
+                                                   formatCurrency, // Destructure from props
+                                                   formatDate, // Destructure from props
+                                                   t, // Destructure from props
                                                }) => {
     const [showAll, setShowAll] = useState(false);
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
     const [btnHover, setBtnHover] = useState(false);
     const green = '#00b069';
-
-    const formatDate = (d: string) =>
-        new Date(d).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric'
-        });
 
     const toggle = (src: string) => {
         const s = new Set(expanded);
@@ -58,7 +54,7 @@ const IncomeCard: React.FC<IncomeCardProps> = ({
     };
 
     const getLinked = (id: number): Expense | undefined =>
-        expenses.find(e => e.id === id);
+        expenses.find((e) => e.id === id);
 
     // group by source
     const grouped = incomes.reduce(
@@ -76,7 +72,7 @@ const IncomeCard: React.FC<IncomeCardProps> = ({
                     currency: inc.currency,
                     count: 1,
                     latestDate: inc.date,
-                    transactions: [inc]
+                    transactions: [inc],
                 };
             }
             return acc;
@@ -94,17 +90,25 @@ const IncomeCard: React.FC<IncomeCardProps> = ({
             style={{
                 background: 'var(--background)',
                 borderColor: green,
-                color: 'var(--text)'
+                color: 'var(--text)',
             }}
         >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold flex items-center gap-3" style={{ color: green }}>
-                    <div className="p-2 rounded-lg flex items-center" style={{ background: green, color: 'var(--background)' }}>
-                        <TrendingUp className="w-6 h-6" />
+                <h2
+                    className="text-2xl font-bold flex items-center gap-3"
+                    style={{color: green}}
+                >
+                    <div
+                        className="p-2 rounded-lg flex items-center"
+                        style={{background: green, color: 'var(--background)'}}
+                    >
+                        <TrendingUp className="w-6 h-6"/>
                     </div>
-                    <span className="hidden md:inline">Income &amp; Earnings</span>
-                    <span className="inline md:hidden">Earnings</span>
+                    <span className="hidden md:inline">
+    {t('incomeCard.incomeAndEarnings')}
+</span>
+                    <span className="inline md:hidden">{t('dashboard.earnings')}</span>
                 </h2>
                 <div
                     className="px-4 py-2 rounded-full text-lg font-bold absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
@@ -113,10 +117,11 @@ const IncomeCard: React.FC<IncomeCardProps> = ({
                         color: 'var(--background)',
                         top: '-10px',
                         right: '-10px',
-                        zIndex: 10
+                        zIndex: 10,
                     }}
                 >
-                    {formatCurrency(total, incomes[0]?.currency)}
+                    {/* Pass only the amount to formatCurrency, it handles the currency symbol */}
+                    {formatCurrency(total)}
                 </div>
             </div>
 
@@ -133,7 +138,7 @@ const IncomeCard: React.FC<IncomeCardProps> = ({
                                     style={{
                                         background: `${green}10`,
                                         border: `1px solid ${green}20`,
-                                        cursor: g.count > 1 ? 'pointer' : 'default'
+                                        cursor: g.count > 1 ? 'pointer' : 'default',
                                     }}
                                 >
                                     <div className="flex items-center gap-2 flex-1">
@@ -142,7 +147,7 @@ const IncomeCard: React.FC<IncomeCardProps> = ({
                                                 className={`w-4 h-4 transition-transform duration-200 ${
                                                     expanded.has(g.source) ? 'rotate-90' : ''
                                                 }`}
-                                                style={{ color: green }}
+                                                style={{color: green}}
                                             />
                                         )}
                                         <div className="flex flex-col flex-1">
@@ -150,37 +155,46 @@ const IncomeCard: React.FC<IncomeCardProps> = ({
                                                 {g.count > 1 && (
                                                     <span
                                                         className="text-xs px-2 py-1 rounded-full font-bold"
-                                                        style={{ background: green, color: 'var(--background)' }}
+                                                        style={{
+                                                            background: green,
+                                                            color: 'var(--background)',
+                                                        }}
                                                     >
-                            x{g.count}
-                          </span>
+                                                        x{g.count}
+                                                    </span>
                                                 )}
                                                 <span className="font-medium">{g.source}</span>
                                             </div>
                                             {g.count === 1 && (
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs opacity-60">{formatDate(g.latestDate)}</span>
+                                                    <span className="text-xs opacity-60">
+                                                        {formatDate(g.latestDate)}
+                                                    </span>
                                                     {g.transactions[0].origin &&
                                                         g.transactions[0].origin !== g.source && (
-                                                            <span className="text-xs" style={{ color: green }}>
-                                {g.transactions[0].origin}
-                              </span>
+                                                            <span className="text-xs" style={{color: green}}>
+                                                                {g.transactions[0].origin}
+                                                            </span>
                                                         )}
                                                     {g.transactions[0].linkedExpenseId && (
                                                         <span className="text-xs opacity-60">
-                              for{' '}
-                                                            <span style={{ color: green }}>
-                                {getLinked(g.transactions[0].linkedExpenseId)?.description}
-                              </span>
-                            </span>
+                                                            {t('incomeCard.for')}{' '}
+                                                            <span style={{color: green}}>
+                                                                {
+                                                                    getLinked(
+                                                                        g.transactions[0].linkedExpenseId
+                                                                    )?.description
+                                                                }
+                                                            </span>
+                                                        </span>
                                                     )}
                                                 </div>
                                             )}
                                         </div>
                                     </div>
-                                    <span className="font-bold text-lg" style={{ color: green }}>
-                    {formatCurrency(g.totalAmount, g.currency)}
-                  </span>
+                                    <span className="font-bold text-lg" style={{color: green}}>
+                                        {formatCurrency(g.totalAmount)}
+                                    </span>
                                 </div>
 
                                 {/* Expanded items */}
@@ -189,47 +203,58 @@ const IncomeCard: React.FC<IncomeCardProps> = ({
                                         {g.transactions
                                             .sort((a, b) => +new Date(b.date) - +new Date(a.date))
                                             .map((tr) => {
-                                                const exp = tr.linkedExpenseId && getLinked(tr.linkedExpenseId);
+                                                const exp =
+                                                    tr.linkedExpenseId &&
+                                                    getLinked(tr.linkedExpenseId);
                                                 return (
                                                     <div
                                                         key={tr.id}
                                                         className="flex justify-between items-center p-3 rounded-lg"
                                                         style={{
                                                             background: `${green}05`,
-                                                            border: `1px solid ${green}15`
+                                                            border: `1px solid ${green}15`,
                                                         }}
                                                     >
                                                         <div className="flex flex-col flex-1">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-sm font-medium">{tr.source}</span>
+                                                                <span className="text-sm font-medium">
+                                                                    {tr.source}
+                                                                </span>
                                                                 {tr.type === 'return' && (
                                                                     <RotateCcw
                                                                         className="w-4 h-4"
-                                                                        style={{ color: green }}
-                                                                        aria-label="Return"
+                                                                        style={{color: green}}
+                                                                        aria-label={t(
+                                                                            'incomeCard.returnLabel'
+                                                                        )}
                                                                     />
                                                                 )}
                                                             </div>
                                                             <div className="flex items-center gap-2 mt-1">
-                                                                <span className="text-xs opacity-60">{formatDate(tr.date)}</span>
+                                                                <span className="text-xs opacity-60">
+                                                                    {formatDate(tr.date)}
+                                                                </span>
                                                                 {tr.origin && tr.origin !== tr.source && (
-                                                                    <span className="text-xs" style={{ color: green }}>
-                                    {tr.origin}
-                                  </span>
+                                                                    <span className="text-xs" style={{color: green}}>
+                                                                        {tr.origin}
+                                                                    </span>
                                                                 )}
                                                                 {exp && (
                                                                     <span className="text-xs opacity-60">
-                                    for{' '}
-                                                                        <span style={{ color: green }}>
-                                      {exp.description}
-                                    </span>
-                                  </span>
+                                                                        {t('incomeCard.for')}{' '}
+                                                                        <span style={{color: green}}>
+                                                                            {exp.description}
+                                                                        </span>
+                                                                    </span>
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <span className="font-bold" style={{ color: green }}>
-                              {formatCurrency(tr.amount, tr.currency)}
-                            </span>
+                                                        <span
+                                                            className="font-bold"
+                                                            style={{color: green}}
+                                                        >
+                                                            {formatCurrency(tr.amount)}
+                                                        </span>
                                                     </div>
                                                 );
                                             })}
@@ -248,18 +273,18 @@ const IncomeCard: React.FC<IncomeCardProps> = ({
                                 style={{
                                     borderColor: green,
                                     color: green,
-                                    background: btnHover ? `${green}20` : 'transparent'
+                                    background: btnHover ? `${green}20` : 'transparent',
                                 }}
                             >
                                 {showAll ? (
                                     <>
-                                        <ChevronUp className="w-4 h-4" />
-                                        Show Less
+                                        <ChevronUp className="w-4 h-4"/>
+                                        {t('incomeCard.showLess')}
                                     </>
                                 ) : (
                                     <>
-                                        <ChevronDown className="w-4 h-4" />
-                                        Show {groups.length - 5} More
+                                        <ChevronDown className="w-4 h-4"/>
+                                        {t('incomeCard.showMore', {count: groups.length - 5})}
                                     </>
                                 )}
                             </button>
@@ -267,19 +292,21 @@ const IncomeCard: React.FC<IncomeCardProps> = ({
                     </>
                 ) : (
                     <div className="text-center py-8 opacity-60">
-                        <p>No income recorded</p>
-                        <p className="text-sm">Add your income sources!</p>
+                        <p>{t('incomeCard.noIncomeRecorded')}</p>
+                        <p className="text-sm">{t('incomeCard.addIncomeSources')}</p>
                     </div>
                 )}
             </div>
 
             {/* Footer */}
-            <div className="mt-6 pt-4" style={{ borderTop: `2px solid ${green}30` }}>
+            <div className="mt-6 pt-4" style={{borderTop: `2px solid ${green}30`}}>
                 <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold">Total Income:</span>
-                    <span className="text-2xl font-bold" style={{ color: green }}>
-            {formatCurrency(total, incomes[0]?.currency)}
-          </span>
+                    <span className="text-lg font-bold">
+                        {t('incomeCard.totalIncome')}:
+                    </span>
+                    <span className="text-2xl font-bold" style={{color: green}}>
+                        {formatCurrency(total)}
+                    </span>
                 </div>
             </div>
         </div>
