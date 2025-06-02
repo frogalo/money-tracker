@@ -143,6 +143,38 @@
       }
     }
   },
+  "transactionModal": {
+    "addTransaction": "Add Transaction",
+    "editTransaction": "Edit Transaction",
+    "close": "Close",
+    "expense": "Expense",
+    "income": "Income",
+    "amount": "Amount",
+    "currency": "Currency",
+    "date": "Date",
+    "description": "Description",
+    "descriptionPlaceholder": "e.g., Coffee with friends",
+    "category": "Category",
+    "selectCategory": "Select a category",
+    "merchant": "Merchant",
+    "merchantPlaceholder": "e.g., Starbucks",
+    "source": "Source",
+    "sourcePlaceholder": "e.g., Salary",
+    "incomeType": "Income Type",
+    "incomeTypes": {
+      "salary": "Salary",
+      "investment": "Investment",
+      "transfer": "Transfer",
+      "gift": "Gift",
+      "other": "Other",
+      "refund": "Refund"
+    },
+    "returnPercentage": "Return Percentage",
+    "linkedTransactionId": "Linked Transaction ID",
+    "optionalIdPlaceholder": "Optional, transaction ID",
+    "saveChanges": "Save Changes",
+    "add": "Add"
+  },
   "categories": {
     "survival": "Survival",
     "survival_description": "Housing, utilities, insurance",

@@ -142,19 +142,51 @@
       }
     }
   },
-  "categories": {
-    "survival": "Potrzeby",
-    "survival_description": "Mieszkanie, rachunki, ubezpieczenie",
-    "growth": "Rozwój",
-    "growth_description": "Inwestycje, edukacja, umiejętności, biznes",
-    "fun": "Rozrywka",
-    "fun_description": "Rozrywka, hobby, podróże",
-    "restaurants": "Restauracje",
-    "restaurants_description": "Jedzenie na mieście, dostawa jedzenia, kawiarnie",
-    "mobility": "Mobilność",
-    "mobility_description": "Transport, samochód, paliwo, podróże",
-    "groceries": "Zakupy spożywcze",
-    "groceries_description": "Zakupy spożywcze, artykuły gospodarstwa domowego"
+  "transactionModal": {
+    "addTransaction": "Dodaj Transakcję",
+    "editTransaction": "Edytuj Transakcję",
+    "close": "Zamknij",
+    "expense": "Wydatek",
+    "income": "Przychód",
+    "amount": "Kwota",
+    "currency": "Waluta",
+    "date": "Data",
+    "description": "Opis",
+    "descriptionPlaceholder": "np. Kawa z przyjaciółmi",
+    "category": "Kategoria",
+    "selectCategory": "Wybierz kategorię",
+    "merchant": "Sprzedawca",
+    "merchantPlaceholder": "np. Starbucks",
+    "source": "Źródło",
+    "sourcePlaceholder": "np. Wynagrodzenie",
+    "incomeType": "Typ Przychodu",
+    "incomeTypes": {
+      "salary": "Wynagrodzenie",
+      "investment": "Inwestycja",
+      "transfer": "Przelew",
+      "gift": "Prezent",
+      "other": "Inne",
+      "refund": "Zwrot"
+    },
+    "returnPercentage": "Procent Zwrotu",
+    "linkedTransactionId": "Powiązana transakcja (ID)",
+    "optionalIdPlaceholder": "Opcjonalnie, ID transakcji",
+    "saveChanges": "Zapisz zmiany",
+    "add": "Dodaj"
   },
-  "loading": "Ładowanie Twojego pulpitu..."
-}
+    "categories": {
+      "survival": "Potrzeby",
+      "survival_description": "Mieszkanie, rachunki, ubezpieczenie",
+      "growth": "Rozwój",
+      "growth_description": "Inwestycje, edukacja, umiejętności, biznes",
+      "fun": "Rozrywka",
+      "fun_description": "Rozrywka, hobby, podróże",
+      "restaurants": "Restauracje",
+      "restaurants_description": "Jedzenie na mieście, dostawa jedzenia, kawiarnie",
+      "mobility": "Mobilność",
+      "mobility_description": "Transport, samochód, paliwo, podróże",
+      "groceries": "Zakupy spożywcze",
+      "groceries_description": "Zakupy spożywcze, artykuły gospodarstwa domowego"
+    },
+    "loading": "Ładowanie Twojego pulpitu..."
+  }

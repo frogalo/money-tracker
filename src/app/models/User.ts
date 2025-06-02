@@ -1,6 +1,7 @@
-import {Schema, model, models} from 'mongoose';
+import { Schema, model, models, Document } from 'mongoose';
+import { IUserSettings, IUser } from './interfaces';
 
-const UserSchema = new Schema({
+const UserSchema = new Schema<IUser>({
     email: {
         type: String,
         required: true,
@@ -59,7 +60,6 @@ const UserSchema = new Schema({
             default: 'en',
             enum: ['en', 'pl', 'es', 'fr'],
         },
-        // Notification preferences (for future implementation)
         notifications: {
             push: {
                 type: Boolean,
@@ -74,7 +74,6 @@ const UserSchema = new Schema({
                 default: true,
             },
         },
-        // Budget settings (for future implementation)
         budget: {
             monthlyLimit: {
                 type: Number,
@@ -82,7 +81,6 @@ const UserSchema = new Schema({
                 min: 0,
             },
         },
-        // Privacy settings (for future implementation)
         privacy: {
             dataRetention: {
                 type: String,
@@ -91,7 +89,12 @@ const UserSchema = new Schema({
             },
         },
     },
-    // Timestamps
+    transactions: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Transaction',
+        },
+    ],
     updatedAt: {
         type: Date,
         default: Date.now,
@@ -100,16 +103,20 @@ const UserSchema = new Schema({
 
 // Update the updatedAt field before saving
 UserSchema.pre('save', function (next) {
-    this.updatedAt = new Date();
+    // Explicitly type `this` as IUser to confirm to TypeScript that `updatedAt` is a Date
+    const doc = this as IUser;
+    doc.updatedAt = new Date();
     next();
 });
 
 // Update the updatedAt field before updating
 UserSchema.pre('findOneAndUpdate', function (next) {
-    this.set({updatedAt: new Date()});
+    // For `findOneAndUpdate` pre-hook, `this` is a Query, not a document.
+    // The `set` method is safe here, but ensuring type consistency for the `updatedAt` type.
+    this.set('updatedAt', new Date()); // Mongoose's set method handles the Date object correctly.
     next();
 });
 
-const User = models.User || model('User', UserSchema);
+const User = models.User || model<IUser>('User', UserSchema);
 
 export default User;

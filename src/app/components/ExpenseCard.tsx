@@ -7,29 +7,9 @@ import {
     ChevronUp,
     RotateCcw
 } from 'lucide-react';
-import { TFunction } from 'i18next'; // Import TFunction
+import { TFunction } from 'i18next';
+import {Expense, Income} from "@/app/types"; // Import TFunction
 
-interface Expense {
-    id: number;
-    category: string;
-    description: string;
-    amount: number;
-    currency: string;
-    date: string;
-    origin?: string;
-    linkedIncomeId?: number;
-}
-
-interface Income {
-    id: number;
-    source: string;
-    amount: number;
-    currency?: string;
-    type: 'salary' | 'investment' | 'transfer' | 'other' | 'return';
-    date: string;
-    linkedExpenseId?: number;
-    returnPercentage?: number;
-}
 
 interface ExpenseCardProps {
     title: string;

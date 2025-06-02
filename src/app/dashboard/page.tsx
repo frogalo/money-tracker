@@ -1,8 +1,8 @@
 'use client';
 
-import React, {useEffect, useState} from 'react';
-import {useRouter} from 'next/navigation';
-import {useSession} from 'next-auth/react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import {
     Plus,
     Home,
@@ -19,14 +19,23 @@ import ExpenseCard from '@/app/components/ExpenseCard';
 import IncomeCard from '@/app/components/IncomeCard';
 import StatCard from '@/app/components/StatCard';
 import mockData from '@/app/dashboard/mockData.json';
-import {Expense, Income} from '@/app/types';
-import {getTranslation} from '@/app/i18n';
-import {TFunction, TOptions} from 'i18next'; // Ensure TOptions is imported
-import {Locale} from '@/app/i18n/settings';
-import {fallbackTexts} from "@/app/i18n/fallbackTexts";
+import {
+    Expense,
+    Income,
+    Transaction, // Import the union type Transaction
+    Currency,     // Import Currency type
+    ExpenseCategory, // Import category types
+    IncomeCategory,
+    IncomeSourceType
+} from '@/app/types'; // Adjust path as needed
+import { getTranslation } from '@/app/i18n';
+import { TFunction, TOptions } from 'i18next';
+import { Locale } from '@/app/i18n/settings';
+import { fallbackTexts, FallbackTextKeys } from '@/app/i18n/fallbackTexts'; // Adjust path as needed
+import TransactionModal from '@/app/components/TransactionModal'; // Import the new modal component
 
 interface UserSettings {
-    defaultCurrency: 'PLN' | 'USD' | 'EUR' | 'GBP';
+    defaultCurrency: Currency; // Use Currency type
     preferredDateFormat: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
     customName: string;
     preferredTheme: 'light' | 'dark';
@@ -46,16 +55,27 @@ interface UserSettings {
 
 
 const DashboardPage = () => {
-    const {data: session, status} = useSession();
+    const { data: session, status } = useSession();
     const router = useRouter();
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [incomes, setIncomes] = useState<Income[]>([]);
     const [settings, setSettings] = useState<UserSettings | null>(null);
-    const [t, setT] = useState<TFunction | null>(null); // State for the actual i18next t function
-    const [, setLoadingTranslations] = useState(true);
-    const [isInitialized, setIsInitialized] = useState(false); // Tracks if initial data & translations are loaded
+    const [t, setT] = useState<TFunction | null>(null);
+    const [, setLoadingTranslations] = useState(true); // `setLoadingTranslations` is not used, so can remove `setLoadingTranslations` from the array.
+    const [isInitialized, setIsInitialized] = useState(false);
 
-    // Currency symbols mapping
+    // Modal state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>(undefined);
+
+    // Define available currencies and categories
+    const availableCurrencies: Currency[] = ['PLN', 'USD', 'EUR', 'GBP'];
+    const expenseCategories: ExpenseCategory[] = ['Survival', 'Growth', 'Fun', 'Restaurants', 'Mobility', 'Groceries', 'Other'];
+    const incomeCategories: IncomeCategory[] = ['Salary', 'Investment', 'Gift', 'Refund', 'Other'];
+    const incomeSourceTypes: IncomeSourceType[] = ['salary', 'investment', 'transfer', 'gift', 'other', 'refund'];
+
+
+    // Currency symbols mapping (can be moved to `fallbackTexts` if needed, or kept here)
     const currencySymbols = {
         PLN: 'zł',
         USD: '$',
@@ -64,7 +84,6 @@ const DashboardPage = () => {
     };
 
     // Safe translation function with fallback
-    // Changed 'options?: any' to 'options?: TOptions' here
     const safeT: (key: string, options?: TOptions) => string = (key: string, options?: TOptions): string => {
         if (t && typeof t === 'function') {
             try {
@@ -75,18 +94,12 @@ const DashboardPage = () => {
             }
         }
 
-        // Fallback to predefined texts if `t` is not loaded or fails
         if (key in fallbackTexts) {
-            let text = fallbackTexts[key as keyof typeof fallbackTexts];
-
-            // Safely access options properties without 'any'
-            // Ensure options is not null/undefined and is an object before iterating
+            let text = fallbackTexts[key as FallbackTextKeys];
             if (options && typeof options === 'object') {
                 Object.keys(options).forEach(optionKey => {
-                    // Check if optionKey is a property of options
-                    // Use a type assertion to keyof TOptions to please TypeScript
                     if (Object.prototype.hasOwnProperty.call(options, optionKey)) {
-                        const optionValue = options[optionKey as keyof typeof options]; // Access property using keyof TOptions
+                        const optionValue = options[optionKey as keyof TOptions]; // Access property using keyof TOptions
                         if (typeof optionValue === 'string' || typeof optionValue === 'number') {
                             text = text.replace(new RegExp(`{{${optionKey}}}`, 'g'), String(optionValue));
                         }
@@ -95,8 +108,6 @@ const DashboardPage = () => {
             }
             return text;
         }
-
-        // Final fallback: return the key itself if no translation or fallback is found
         return key;
     };
 
@@ -125,7 +136,7 @@ const DashboardPage = () => {
         preferredDateFormat: 'MM/DD/YYYY',
         customName: '',
         preferredTheme: 'dark',
-        language: 'en', // Default to English if settings not fetched
+        language: 'en',
         notifications: {
             push: true,
             email: false,
@@ -142,55 +153,51 @@ const DashboardPage = () => {
     // Initialize translations based on user settings
     const initTranslations = async (userSettings: UserSettings) => {
         try {
-            // Dynamically load the translation bundle for the user's preferred language
             const {t: loadedT} = await getTranslation(
                 userSettings.language as Locale,
                 'translation'
             );
 
-            // Set the loaded i18next t function to the state
             if (loadedT && typeof loadedT === 'function') {
                 setT(() => loadedT);
             } else {
                 console.warn('getTranslation did not return a valid translation function. Using fallback.');
-                setT(null); // Explicitly set to null if invalid
+                setT(null);
             }
         } catch (error) {
             console.error('Failed to load i18next translations:', error);
-            setT(null); // Fallback to null in case of error
+            setT(null);
         } finally {
             setLoadingTranslations(false);
-            setIsInitialized(true); // Mark as initialized regardless of translation success
+            setIsInitialized(true);
         }
     };
 
-    // Format currency based on user settings - NOW ALWAYS RETURNS A STRING
+    // Format currency based on user settings
     const formatCurrency = (amount: number): string => {
-        // Use default settings if actual settings are not yet loaded
         const currentSettings = settings || getDefaultSettings();
         const symbol = currencySymbols[currentSettings.defaultCurrency];
-        const formattedAmount = amount.toLocaleString(currentSettings.language, { // Use user's language for locale
+        const formattedAmount = amount.toLocaleString(currentSettings.language, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
         });
 
         switch (currentSettings.defaultCurrency) {
             case 'PLN':
-                return `${formattedAmount} ${symbol}`; // e.g., 100,00 zł
+                return `${formattedAmount} ${symbol}`;
             case 'EUR':
-                return `${formattedAmount}${symbol}`; // e.g., 100,00€ (common in some locales)
+                return `${formattedAmount}${symbol}`;
             case 'GBP':
-                return `${symbol}${formattedAmount}`; // e.g., £100.00
+                return `${symbol}${formattedAmount}`;
             case 'USD':
             default:
-                return `${symbol}${formattedAmount}`; // e.g., $100.00
+                return `${symbol}${formattedAmount}`;
         }
     };
 
-    // Format date based on user settings - NOW ALWAYS RETURNS A STRING
+    // Format date based on user settings
     const formatDate = (dateString: string): string => {
         const date = new Date(dateString);
-        // Use default settings if actual settings are not yet loaded
         const currentSettings = settings || getDefaultSettings();
 
         const day = date.getDate().toString().padStart(2, '0');
@@ -208,49 +215,61 @@ const DashboardPage = () => {
         }
     };
 
+    // Helper to determine category icon and color (if you want more dynamic)
+    // const getCategoryProps = (categoryName: string) => {
+    //     // Find in your `categories` array defined below.
+    //     const cat = categories.find(c => c.name === categoryName);
+    //     if (cat) return { icon: cat.icon, color: cat.color };
+    //
+    //     // Fallback for categories not explicitly listed or 'Other'
+    //     // You might want to define default icons/colors for 'Other' or unknown.
+    //     if (categoryName === 'Other') return { icon: Sparkles, color: '#cccccc' }; // A neutral fallback
+    //     return { icon: Sparkles, color: '#808080' }; // Default generic icon/color
+    // };
 
-    // Updated categories with translations
-    const getCategories = () => [
+
+    // Updated categories with translations for ExpenseCard
+    const categories = [
         {
             name: 'Survival',
             icon: Home,
-            color: '#ac7ad2',
+            color: '#b56ee5', // Example color
             description: safeT('dashboard.categories.survival.description'),
         },
         {
             name: 'Growth',
             icon: TrendingUp,
-            color: '#47931a',
+            color: '#47931a', // Example color
             description: safeT('dashboard.categories.growth.description'),
         },
         {
             name: 'Fun',
             icon: Sparkles,
-            color: '#d08f16',
+            color: '#d08f16', // Example color
             description: safeT('dashboard.categories.fun.description'),
         },
         {
             name: 'Restaurants',
             icon: UtensilsIcon,
-            color: '#ff6b6b',
+            color: '#ff6b6b', // Example color
             description: safeT('dashboard.categories.restaurants.description'),
         },
         {
             name: 'Mobility',
             icon: Car,
-            color: '#9843af',
+            color: '#4ecdc4', // Example color
             description: safeT('dashboard.categories.mobility.description'),
         },
         {
             name: 'Groceries',
             icon: ShoppingCart,
-            color: '#2d8ba1',
+            color: '#45b7d1', // Example color
             description: safeT('dashboard.categories.groceries.description'),
         },
     ];
 
     useEffect(() => {
-        let mounted = true; // Flag to prevent state updates on unmounted component
+        let mounted = true;
 
         const initializeDashboard = async () => {
             if (status === 'unauthenticated') {
@@ -259,17 +278,14 @@ const DashboardPage = () => {
             }
 
             if (status === 'authenticated' && session?.user) {
-                // Load data from JSON file
                 if (mounted) {
                     setExpenses(mockData.expenses as Expense[]);
                     setIncomes(mockData.incomes as Income[]);
                 }
 
-                // Fetch settings
                 const userSettings = await fetchSettings();
                 if (mounted) {
                     setSettings(userSettings);
-                    // Initialize translations with fetched or default settings
                     await initTranslations(userSettings);
                 }
             }
@@ -278,19 +294,15 @@ const DashboardPage = () => {
         initializeDashboard();
 
         return () => {
-            mounted = false; // Cleanup: set mounted to false when component unmounts
+            mounted = false;
         };
-    }, [status, session, router]); // Dependencies for useEffect
+    }, [status, session, router]);
 
-
-    // Calculate totals - These calculations don't depend on `t` or `settings` directly,
-    // but the `formatCurrency` and `formatDate` calls below will.
     const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
     const totalIncome = incomes.reduce((sum, inc) => sum + inc.amount, 0);
     const netBalance = totalIncome - totalExpenses;
 
-    // Show loading spinner if not yet initialized
-    if (!isInitialized) { // Only check for isInitialized, settings are handled by format functions
+    if (!isInitialized) {
         return (
             <div
                 className="min-h-screen flex items-center justify-center"
@@ -316,10 +328,54 @@ const DashboardPage = () => {
         return null;
     }
 
-    // Now, `settings` is guaranteed to be a UserSettings object (either fetched or default)
-    // and `t` (via `safeT`) is also ready.
     const displayName = settings?.customName || session.user.name || safeT('dashboard.defaultWelcome');
-    const categories = getCategories();
+
+    // --- Modal Handlers ---
+    const handleAddTransactionClick = () => {
+        setEditingTransaction(undefined); // Clear any existing transaction data
+        setIsModalOpen(true);
+    };
+
+    // const handleEditTransactionClick = (transaction: Transaction) => {
+    //     setEditingTransaction(transaction); // Set the transaction to be edited
+    //     setIsModalOpen(true);
+    // };
+
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+        setEditingTransaction(undefined); // Clear editing state after closing
+    };
+
+    const handleSaveTransaction = (transaction: Transaction) => {
+        console.log('Transaction saved:', transaction);
+        // In a real application, you would send this 'transaction' object
+        // to your backend API here (e.g., POST for new, PUT/PATCH for edit).
+        // For this example, we'll simulate adding/updating in local state.
+
+        if (transaction.id) {
+            // EDIT MODE: Update existing transaction
+            if (transaction.type === 'expense') {
+                setExpenses(prev => prev.map(exp => exp.id === transaction.id ? transaction as Expense : exp));
+            } else {
+                setIncomes(prev => prev.map(inc => inc.id === transaction.id ? transaction as Income : inc));
+            }
+        } else {
+            // ADD MODE: Add new transaction with a mock ID
+            // Generate a unique ID (in real app, this would be from DB)
+            const newId = Math.max(
+                ...expenses.map(e => e.id || 0), // Use 0 as default if id is undefined
+                ...incomes.map(i => i.id || 0), // Use 0 as default if id is undefined
+                0 // Ensures Math.max works correctly even if arrays are empty
+            ) + 1;
+
+            if (transaction.type === 'expense') {
+                setExpenses(prev => [...prev, { ...(transaction as Expense), id: newId }]);
+            } else {
+                setIncomes(prev => [...prev, { ...(transaction as Income), id: newId }]);
+            }
+        }
+    };
+
 
     return (
         <div className="min-h-screen" style={{background: 'var(--background)'}}>
@@ -475,6 +531,7 @@ const DashboardPage = () => {
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                     <button
+                        onClick={handleAddTransactionClick} // Connects to modal
                         className="px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                         style={{background: 'var(--primary)', color: 'var(--background)'}}
                     >
@@ -608,6 +665,19 @@ const DashboardPage = () => {
                     </div>
                 </div>
             </div>
+            {/* Transaction Modal */}
+            <TransactionModal
+                isOpen={isModalOpen}
+                onClose={handleModalClose}
+                onSave={handleSaveTransaction}
+                initialTransaction={editingTransaction}
+                t={safeT as TFunction}
+                availableCurrencies={availableCurrencies}
+                defaultCurrency={settings?.defaultCurrency || 'USD'}
+                expenseCategories={expenseCategories}
+                incomeCategories={incomeCategories}
+                incomeSourceTypes={incomeSourceTypes}
+            />
         </div>
     );
 };
