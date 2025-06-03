@@ -1,36 +1,167 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💸 Money Tracker
 
-## Getting Started
+A modern, full-stack expense and income tracker built with **Next.js 15**, **MongoDB**, **NextAuth**, and **TypeScript**.
+Track your finances, manage your budget, and gain insights into your spending and earnings.
 
-First, run the development server:
+---
+
+## 🚀 Features
+
+* **User Authentication** (Google OAuth via NextAuth)
+* **Add/Edit/Delete Transactions** (income & expenses)
+* **Category-based analytics**
+* **Multi-currency support**
+* **User settings** (theme, language, date format, etc.)
+* **Responsive UI** (mobile & desktop)
+* **Dark/Light mode**
+* **i18n (internationalization)**
+* **Docker & Docker Compose support**
+* **Production-ready**
+
+---
+
+## 🛠️ Tech Stack
+
+* [Next.js 15 (App Router)](https://nextjs.org/)
+* [TypeScript](https://www.typescriptlang.org/)
+* [MongoDB + Mongoose](https://mongoosejs.com/)
+* [NextAuth.js](https://next-auth.js.org/)
+* [Tailwind CSS](https://tailwindcss.com/)
+* [react-hot-toast](https://react-hot-toast.com/)
+* [Docker](https://www.docker.com/)
+
+---
+
+## ⚡ Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/yourusername/money-tracker.git
+cd money-tracker
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+# or
+yarn install
+```
+
+### 3. Configure environment variables
+
+Create a `.env.local` file in the project root:
+
+```env
+# MongoDB connection string (do NOT use NEXT_PUBLIC_ prefix)
+MONGODB_URI=mongodb+srv://user:password@host/db
+
+# NextAuth secret (generate with `openssl rand -base64 32`)
+NEXTAUTH_SECRET=your-secret-here
+
+# Google OAuth (get from Google Cloud Console)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# (Optional) Public API URL for client-side code
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
+
+### 4. Run the development server
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🐳 Docker
 
-## Learn More
+### Build and run with Docker
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+docker build -t money-tracker .
+docker run -d --env-file .env.local -p 3000:3000 money-tracker
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### With Docker Compose (MongoDB + App)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Create a `docker-compose.yml` file:
 
-## Deploy on Vercel
+```yaml
+version: '3.8'
+services:
+  mongo:
+    image: mongo:6
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+  app:
+    build: .
+    depends_on:
+      - mongo
+    environment:
+      MONGODB_URI: mongodb://root:example@mongo:27017/moneytracker?authSource=admin
+      NEXTAUTH_SECRET: your-nextauth-secret
+      GOOGLE_CLIENT_ID: your-google-client-id
+      GOOGLE_CLIENT_SECRET: your-google-client-secret
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+volumes:
+  mongo-data:
+```
+
+Then run:
+
+```bash
+docker-compose up -d
+```
+
+---
+
+## 🌍 Deployment
+
+* **Vercel**: Set all environment variables in the Vercel dashboard.
+
+* **VPS/Cloud**: Use Docker as above, or set environment variables and run:
+
+  ```bash
+  npm run build && npm start
+  ```
+
+* **Reverse Proxy**: Use Nginx or Caddy for HTTPS and custom domains.
+
+---
+
+## 🧑‍💻 Project Structure
+
+```
+src/
+├── app/             # Next.js app directory
+├── api/             # API routes (server only)
+├── components/      # React components
+├── constants/       # App constants
+├── hooks/           # Custom React hooks
+├── lib/             # Server-side utilities (db, auth, etc.)
+├── models/          # Mongoose models
+├── providers/       # Context providers
+├── types/           # TypeScript types
+├── utils/           # Utility functions
+public/              # Static assets
+styles/              # Global styles
+```
+
+---
