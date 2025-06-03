@@ -47,6 +47,6 @@ COPY --from=builder /app/package.json ./package.json
 # If you use .env.production, copy it here (or set envs in your deployment)
 # COPY .env.production .env.production
 
-EXPOSE 3000
+EXPOSE 3001
 
 CMD ["npm", "start"]
