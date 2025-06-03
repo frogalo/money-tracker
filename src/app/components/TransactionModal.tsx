@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X, Save, DollarSign, Calendar, Tag, Info, ListFilter, Repeat, Wallet } from 'lucide-react';
+import React, {useState, useEffect} from 'react';
+import {X, Save, DollarSign, Calendar, Tag, Info, ListFilter, Repeat, Wallet} from 'lucide-react';
 import {
     Transaction,
     Expense,
@@ -12,8 +12,10 @@ import {
     IncomeSourceType,
     BaseTransaction
 } from '@/app/types';
-import { TFunction } from 'i18next';
+import {TFunction} from 'i18next';
 import CustomButton from './buttons/CustomButton';
+import {useSession} from "next-auth/react";
+
 
 interface TransactionModalProps {
     isOpen: boolean;
@@ -62,7 +64,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     const [returnPercentage, setReturnPercentage] = useState<number | string>(
         (initialTransaction as Income)?.returnPercentage || ''
     );
-
+    const {data: session} = useSession();
     useEffect(() => {
         if (isOpen && initialTransaction) {
             setTransactionType(initialTransaction.type);
@@ -97,13 +99,12 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
         }
     }, [isOpen, initialTransaction, defaultCurrency]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // FIX: Safely parse linkedTransactionId string to number or undefined
-        const parsedLinkedTransactionId = linkedTransactionId === ''
-            ? undefined
-            : parseInt(linkedTransactionId); // parseInt handles non-numeric strings by returning NaN
+        // Safely parse linkedTransactionId string to number or undefined
+        const parsedLinkedTransactionId =
+            linkedTransactionId === '' ? undefined : parseInt(linkedTransactionId);
 
         const baseData: BaseTransaction = {
             amount: parseFloat(amount as string),
@@ -111,8 +112,9 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             date: date,
             description: description,
             origin: source,
-            // FIX: Assign parsed value
-            linkedTransactionId: isNaN(parsedLinkedTransactionId as number) ? undefined : parsedLinkedTransactionId,
+            linkedTransactionId: isNaN(parsedLinkedTransactionId as number)
+                ? undefined
+                : parsedLinkedTransactionId,
         };
 
         if (isEditMode && initialTransaction?.id) {
@@ -135,14 +137,57 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 incomeType: selectedIncomeSourceType,
                 source: source,
                 category: category,
-                returnPercentage: selectedIncomeSourceType === 'refund' && returnPercentage !== ''
-                    ? parseFloat(returnPercentage as string)
-                    : undefined,
+                returnPercentage:
+                    selectedIncomeSourceType === 'refund' && returnPercentage !== ''
+                        ? parseFloat(returnPercentage as string)
+                        : undefined,
             };
         }
 
-        onSave(newTransaction);
-        onClose();
+        try {
+            const userId = session?.user?.id; // Ensure you have the user ID from the session
+            if (!userId) {
+                console.error('User ID is missing');
+                return;
+            }
+
+            let response;
+
+            if (isEditMode && initialTransaction?.id) {
+                // PUT request to update an existing transaction
+                response = await fetch(`/api/users/${userId}/transaction/${initialTransaction.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(newTransaction),
+                });
+            } else {
+                // POST request to create a new transaction
+                response = await fetch(`/api/users/${userId}/transaction`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(newTransaction),
+                });
+            }
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.error('Error saving transaction:', data.error || 'Unknown error');
+                return;
+            }
+
+            console.log('Transaction saved successfully:', data.transaction);
+
+            // Call the onSave callback with the saved transaction
+            onSave(data.transaction);
+            onClose();
+        } catch (error) {
+            console.error('Error submitting transaction:', error);
+        }
     };
 
     if (!isOpen) return null;
@@ -159,7 +204,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                     className="absolute top-4 right-4 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                     aria-label={t('transactionModal.close')}
                 >
-                    <X size={24} />
+                    <X size={24}/>
                 </button>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -167,7 +212,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                     <div className="flex justify-center p-1 rounded-full bg-gray-200 dark:bg-gray-700">
                         <button
                             type="button"
-                            className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
+                            className={`cursor-pointer flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
                                 transactionType === 'expense'
                                     ? 'bg-blue-600 text-white'
                                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
@@ -178,7 +223,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                         </button>
                         <button
                             type="button"
-                            className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
+                            className={`cursor-pointer flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
                                 transactionType === 'income'
                                     ? 'bg-green-600 text-white'
                                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
@@ -191,12 +236,14 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
 
                     {/* Amount */}
                     <div>
-                        <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="amount"
+                               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {t('transactionModal.amount')}
                         </label>
                         <div className="mt-1 flex rounded-md shadow-sm">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
-                                <DollarSign size={18} />
+                            <span
+                                className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
+                                <DollarSign size={18}/>
                             </span>
                             <input
                                 type="number"
@@ -213,7 +260,8 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
 
                     {/* Currency */}
                     <div>
-                        <label htmlFor="currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="currency"
+                               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {t('transactionModal.currency')}
                         </label>
                         <select
@@ -233,12 +281,14 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
 
                     {/* Date */}
                     <div>
-                        <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="date"
+                               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {t('transactionModal.date')}
                         </label>
                         <div className="mt-1 flex rounded-md shadow-sm">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
-                                <Calendar size={18} />
+                            <span
+                                className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
+                                <Calendar size={18}/>
                             </span>
                             <input
                                 type="date"
@@ -246,19 +296,21 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                                 value={date}
                                 onChange={(e) => setDate(e.target.value)}
                                 required
-                                className="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                className="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-pointer"
                             />
                         </div>
                     </div>
 
                     {/* Description */}
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="description"
+                               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {t('transactionModal.description')}
                         </label>
                         <div className="mt-1 flex rounded-md shadow-sm">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
-                                <Info size={18} />
+                            <span
+                                className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
+                                <Info size={18}/>
                             </span>
                             <input
                                 type="text"
@@ -275,18 +327,20 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
 
                     {/* Category (Expense) or Category (Income) */}
                     <div>
-                        <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="category"
+                               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {t('transactionModal.category')}
                         </label>
                         <div className="mt-1 flex rounded-md shadow-sm">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
-                                <ListFilter size={18} />
+                            <span
+                                className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
+                                <ListFilter size={18}/>
                             </span>
                             <select
                                 id="category"
                                 value={category}
                                 onChange={(e) => setCategory(e.target.value)}
-                                className="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                className="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-pointer"
                             >
                                 <option value="">{t('transactionModal.selectCategory')}</option>
                                 {(transactionType === 'expense' ? expenseCategories : incomeCategories).map((cat) => (
@@ -300,14 +354,16 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
 
                     {/* Source / Merchant Name */}
                     <div>
-                        <label htmlFor="source" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="source"
+                               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {transactionType === 'expense'
                                 ? t('transactionModal.merchant')
                                 : t('transactionModal.source')}
                         </label>
                         <div className="mt-1 flex rounded-md shadow-sm">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
-                                <Tag size={18} />
+                            <span
+                                className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
+                                <Tag size={18}/>
                             </span>
                             <input
                                 type="text"
@@ -328,19 +384,21 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                     {/* Income Type (if Income) */}
                     {transactionType === 'income' && (
                         <div>
-                            <label htmlFor="incomeType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label htmlFor="incomeType"
+                                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 {t('transactionModal.incomeType')}
                             </label>
                             <div className="mt-1 flex rounded-md shadow-sm">
-                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
-                                    <Wallet size={18} />
+                                <span
+                                    className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
+                                    <Wallet size={18}/>
                                 </span>
                                 <select
                                     id="incomeType"
                                     value={selectedIncomeSourceType}
                                     onChange={(e) => setSelectedIncomeSourceType(e.target.value as IncomeSourceType)}
                                     required
-                                    className="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    className="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-pointer"
                                 >
                                     {incomeSourceTypes.map((type) => (
                                         <option key={type} value={type}>
@@ -355,12 +413,14 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                     {/* Return Percentage (if Income Type is 'refund') */}
                     {transactionType === 'income' && selectedIncomeSourceType === 'refund' && (
                         <div>
-                            <label htmlFor="returnPercentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label htmlFor="returnPercentage"
+                                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 {t('transactionModal.returnPercentage')}
                             </label>
                             <div className="mt-1 flex rounded-md shadow-sm">
-                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
-                                    <Repeat size={18} />
+                                <span
+                                    className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
+                                    <Repeat size={18}/>
                                 </span>
                                 <input
                                     type="number"
@@ -379,18 +439,20 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
 
                     {/* Linked Transaction ID (Optional) */}
                     <div>
-                        <label htmlFor="linkedTransactionId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="linkedTransactionId"
+                               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {t('transactionModal.linkedTransactionId')}
                         </label>
                         <div className="mt-1 flex rounded-md shadow-sm">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
-                                <Tag size={18} />
+                            <span
+                                className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
+                                <Tag size={18}/>
                             </span>
                             <input
                                 type="number"
                                 id="linkedTransactionId"
-                                value={linkedTransactionId} // This is now a string
-                                onChange={(e) => setLinkedTransactionId(e.target.value)} // This accepts a string
+                                value={linkedTransactionId}
+                                onChange={(e) => setLinkedTransactionId(e.target.value)}
                                 placeholder={t('transactionModal.optionalIdPlaceholder')}
                                 className="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                             />
@@ -403,7 +465,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                             type="submit"
                             icon={Save}
                             text={isEditMode ? t('transactionModal.saveChanges') : t('transactionModal.add')}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                            className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                         />
                     </div>
                 </form>

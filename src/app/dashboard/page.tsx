@@ -1,306 +1,133 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import React from 'react';
 import {
-    Plus,
-    Home,
-    Sparkles,
-    TrendingUp,
     BarChart3,
     Calendar,
     Loader2,
-    Car,
-    ShoppingCart,
-    UtensilsIcon,
+    Plus,
 } from 'lucide-react';
+import {TFunction} from 'i18next';
 import ExpenseCard from '@/app/components/ExpenseCard';
 import IncomeCard from '@/app/components/IncomeCard';
 import StatCard from '@/app/components/StatCard';
-import mockData from '@/app/dashboard/mockData.json';
+import TransactionModal from '@/app/components/TransactionModal';
+import {Transaction, Expense, Income} from '@/app/types';
+import {useDashboard} from '@/app/hooks/useDashboard';
 import {
-    Expense,
-    Income,
-    Transaction, // Import the union type Transaction
-    Currency,     // Import Currency type
-    ExpenseCategory, // Import category types
-    IncomeCategory,
-    IncomeSourceType
-} from '@/app/types'; // Adjust path as needed
-import { getTranslation } from '@/app/i18n';
-import { TFunction, TOptions } from 'i18next';
-import { Locale } from '@/app/i18n/settings';
-import { fallbackTexts, FallbackTextKeys } from '@/app/i18n/fallbackTexts'; // Adjust path as needed
-import TransactionModal from '@/app/components/TransactionModal'; // Import the new modal component
-
-interface UserSettings {
-    defaultCurrency: Currency; // Use Currency type
-    preferredDateFormat: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
-    customName: string;
-    preferredTheme: 'light' | 'dark';
-    language: 'en' | 'pl' | 'es' | 'fr';
-    notifications: {
-        push: boolean;
-        email: boolean;
-        budgetAlerts: boolean;
-    };
-    budget: {
-        monthlyLimit: number;
-    };
-    privacy: {
-        dataRetention: '6months' | '1year' | '2years' | 'forever';
-    };
-}
-
+    availableCurrencies,
+    expenseCategories,
+    incomeCategories,
+    incomeSourceTypes,
+    dashboardCategories,
+    DashboardCategory,
+} from '@/app/constants/dashboard';
+import {formatCurrency, formatDate} from '@/app/utils/formatting';
+import {deleteTransaction} from '@/app/services/api';
 
 const DashboardPage = () => {
-    const { data: session, status } = useSession();
-    const router = useRouter();
-    const [expenses, setExpenses] = useState<Expense[]>([]);
-    const [incomes, setIncomes] = useState<Income[]>([]);
-    const [settings, setSettings] = useState<UserSettings | null>(null);
-    const [t, setT] = useState<TFunction | null>(null);
-    const [, setLoadingTranslations] = useState(true); // `setLoadingTranslations` is not used, so can remove `setLoadingTranslations` from the array.
-    const [isInitialized, setIsInitialized] = useState(false);
-
-    // Modal state
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>(undefined);
-
-    // Define available currencies and categories
-    const availableCurrencies: Currency[] = ['PLN', 'USD', 'EUR', 'GBP'];
-    const expenseCategories: ExpenseCategory[] = ['Survival', 'Growth', 'Fun', 'Restaurants', 'Mobility', 'Groceries', 'Other'];
-    const incomeCategories: IncomeCategory[] = ['Salary', 'Investment', 'Gift', 'Refund', 'Other'];
-    const incomeSourceTypes: IncomeSourceType[] = ['salary', 'investment', 'transfer', 'gift', 'other', 'refund'];
-
-
-    // Currency symbols mapping (can be moved to `fallbackTexts` if needed, or kept here)
-    const currencySymbols = {
-        PLN: 'zł',
-        USD: '$',
-        EUR: '€',
-        GBP: '£',
-    };
-
-    // Safe translation function with fallback
-    const safeT: (key: string, options?: TOptions) => string = (key: string, options?: TOptions): string => {
-        if (t && typeof t === 'function') {
-            try {
-                const result = t(key, options);
-                return typeof result === 'string' ? result : key;
-            } catch (error) {
-                console.warn(`Translation error with i18next for key "${key}":`, error);
-            }
-        }
-
-        if (key in fallbackTexts) {
-            let text = fallbackTexts[key as FallbackTextKeys];
-            if (options && typeof options === 'object') {
-                Object.keys(options).forEach(optionKey => {
-                    if (Object.prototype.hasOwnProperty.call(options, optionKey)) {
-                        const optionValue = options[optionKey as keyof TOptions]; // Access property using keyof TOptions
-                        if (typeof optionValue === 'string' || typeof optionValue === 'number') {
-                            text = text.replace(new RegExp(`{{${optionKey}}}`, 'g'), String(optionValue));
-                        }
-                    }
-                });
-            }
-            return text;
-        }
-        return key;
-    };
-
-    // Fetch user settings
-    const fetchSettings = async () => {
-        if (!session?.user?.id) return null;
-
-        try {
-            const response = await fetch(`/api/users/${session.user.id}/settings`);
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                return data.settings;
-            } else {
-                console.warn('Failed to fetch settings from API, using defaults.');
-                return getDefaultSettings();
-            }
-        } catch (error) {
-            console.error('Error fetching settings:', error);
-            return getDefaultSettings();
-        }
-    };
-
-    const getDefaultSettings = (): UserSettings => ({
-        defaultCurrency: 'USD',
-        preferredDateFormat: 'MM/DD/YYYY',
-        customName: '',
-        preferredTheme: 'dark',
-        language: 'en',
-        notifications: {
-            push: true,
-            email: false,
-            budgetAlerts: true,
-        },
-        budget: {
-            monthlyLimit: 0,
-        },
-        privacy: {
-            dataRetention: '1year',
-        },
-    });
-
-    // Initialize translations based on user settings
-    const initTranslations = async (userSettings: UserSettings) => {
-        try {
-            const {t: loadedT} = await getTranslation(
-                userSettings.language as Locale,
-                'translation'
-            );
-
-            if (loadedT && typeof loadedT === 'function') {
-                setT(() => loadedT);
-            } else {
-                console.warn('getTranslation did not return a valid translation function. Using fallback.');
-                setT(null);
-            }
-        } catch (error) {
-            console.error('Failed to load i18next translations:', error);
-            setT(null);
-        } finally {
-            setLoadingTranslations(false);
-            setIsInitialized(true);
-        }
-    };
-
-    // Format currency based on user settings
-    const formatCurrency = (amount: number): string => {
-        const currentSettings = settings || getDefaultSettings();
-        const symbol = currencySymbols[currentSettings.defaultCurrency];
-        const formattedAmount = amount.toLocaleString(currentSettings.language, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
-
-        switch (currentSettings.defaultCurrency) {
-            case 'PLN':
-                return `${formattedAmount} ${symbol}`;
-            case 'EUR':
-                return `${formattedAmount}${symbol}`;
-            case 'GBP':
-                return `${symbol}${formattedAmount}`;
-            case 'USD':
-            default:
-                return `${symbol}${formattedAmount}`;
-        }
-    };
-
-    // Format date based on user settings
-    const formatDate = (dateString: string): string => {
-        const date = new Date(dateString);
-        const currentSettings = settings || getDefaultSettings();
-
-        const day = date.getDate().toString().padStart(2, '0');
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const year = date.getFullYear();
-
-        switch (currentSettings.preferredDateFormat) {
-            case 'DD/MM/YYYY':
-                return `${day}/${month}/${year}`;
-            case 'YYYY-MM-DD':
-                return `${year}-${month}-${day}`;
-            case 'MM/DD/YYYY':
-            default:
-                return `${month}/${day}/${year}`;
-        }
-    };
-
-    // Helper to determine category icon and color (if you want more dynamic)
-    // const getCategoryProps = (categoryName: string) => {
-    //     // Find in your `categories` array defined below.
-    //     const cat = categories.find(c => c.name === categoryName);
-    //     if (cat) return { icon: cat.icon, color: cat.color };
-    //
-    //     // Fallback for categories not explicitly listed or 'Other'
-    //     // You might want to define default icons/colors for 'Other' or unknown.
-    //     if (categoryName === 'Other') return { icon: Sparkles, color: '#cccccc' }; // A neutral fallback
-    //     return { icon: Sparkles, color: '#808080' }; // Default generic icon/color
-    // };
-
-
-    // Updated categories with translations for ExpenseCard
-    const categories = [
-        {
-            name: 'Survival',
-            icon: Home,
-            color: '#b56ee5', // Example color
-            description: safeT('dashboard.categories.survival.description'),
-        },
-        {
-            name: 'Growth',
-            icon: TrendingUp,
-            color: '#47931a', // Example color
-            description: safeT('dashboard.categories.growth.description'),
-        },
-        {
-            name: 'Fun',
-            icon: Sparkles,
-            color: '#d08f16', // Example color
-            description: safeT('dashboard.categories.fun.description'),
-        },
-        {
-            name: 'Restaurants',
-            icon: UtensilsIcon,
-            color: '#ff6b6b', // Example color
-            description: safeT('dashboard.categories.restaurants.description'),
-        },
-        {
-            name: 'Mobility',
-            icon: Car,
-            color: '#4ecdc4', // Example color
-            description: safeT('dashboard.categories.mobility.description'),
-        },
-        {
-            name: 'Groceries',
-            icon: ShoppingCart,
-            color: '#45b7d1', // Example color
-            description: safeT('dashboard.categories.groceries.description'),
-        },
-    ];
-
-    useEffect(() => {
-        let mounted = true;
-
-        const initializeDashboard = async () => {
-            if (status === 'unauthenticated') {
-                router.replace('/');
-                return;
-            }
-
-            if (status === 'authenticated' && session?.user) {
-                if (mounted) {
-                    setExpenses(mockData.expenses as Expense[]);
-                    setIncomes(mockData.incomes as Income[]);
-                }
-
-                const userSettings = await fetchSettings();
-                if (mounted) {
-                    setSettings(userSettings);
-                    await initTranslations(userSettings);
-                }
-            }
-        };
-
-        initializeDashboard();
-
-        return () => {
-            mounted = false;
-        };
-    }, [status, session, router]);
+    const {
+        session,
+        expenses,
+        incomes,
+        settings,
+        safeT,
+        isInitialized,
+        isModalOpen,
+        editingTransaction,
+        setExpenses,
+        setIncomes,
+        setIsModalOpen,
+        setEditingTransaction,
+    } = useDashboard();
 
     const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
     const totalIncome = incomes.reduce((sum, inc) => sum + inc.amount, 0);
     const netBalance = totalIncome - totalExpenses;
+
+    const formatCurrencyWithSettings = (amount: number) =>
+        formatCurrency(amount, settings);
+    const formatDateWithSettings = (dateString: string) =>
+        formatDate(dateString, settings);
+
+    // Modal Handlers
+    const handleAddTransactionClick = () => {
+        setEditingTransaction(undefined);
+        setIsModalOpen(true);
+    };
+
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+        setEditingTransaction(undefined);
+    };
+
+    const handleSaveTransaction = (transaction: Transaction) => {
+        console.log('Transaction saved:', transaction);
+
+        if (transaction.id) {
+            // EDIT MODE
+            if (transaction.type === 'expense') {
+                setExpenses((prev) =>
+                    prev.map((exp) =>
+                        exp.id === transaction.id ? (transaction as Expense) : exp
+                    )
+                );
+            } else {
+                setIncomes((prev) =>
+                    prev.map((inc) =>
+                        inc.id === transaction.id ? (transaction as Income) : inc
+                    )
+                );
+            }
+        } else {
+            // ADD MODE
+            const newId =
+                Math.max(
+                    ...expenses.map((e) => e.id || 0),
+                    ...incomes.map((i) => i.id || 0),
+                    0
+                ) + 1;
+
+            if (transaction.type === 'expense') {
+                setExpenses((prev) => [
+                    ...prev,
+                    {...(transaction as Expense), id: newId},
+                ]);
+            } else {
+                setIncomes((prev) => [
+                    ...prev,
+                    {...(transaction as Income), id: newId},
+                ]);
+            }
+        }
+    };
+
+    const handleEditTransactionClick = (transaction: Transaction) => {
+        setEditingTransaction(transaction);
+        setIsModalOpen(true);
+    };
+
+    const handleDeleteTransaction = async (transaction: Transaction) => {
+        if (!session?.user?.id || !transaction.id) return;
+
+        // Optimistically update UI
+        if (transaction.type === 'expense') {
+            setExpenses((prev) => prev.filter((exp) => exp.id !== transaction.id));
+        } else {
+            setIncomes((prev) => prev.filter((inc) => inc.id !== transaction.id));
+        }
+
+        const success = await deleteTransaction(session, transaction.id);
+
+        if (!success) {
+            // Revert UI update if deletion failed
+            if (transaction.type === 'expense') {
+                setExpenses((prev) => [...prev, transaction as Expense]);
+            } else {
+                setIncomes((prev) => [...prev, transaction as Income]);
+            }
+        }
+    };
 
     if (!isInitialized) {
         return (
@@ -328,54 +155,18 @@ const DashboardPage = () => {
         return null;
     }
 
-    const displayName = settings?.customName || session.user.name || safeT('dashboard.defaultWelcome');
+    const displayName =
+        settings?.customName ||
+        session.user.name ||
+        safeT('dashboard.defaultWelcome');
 
-    // --- Modal Handlers ---
-    const handleAddTransactionClick = () => {
-        setEditingTransaction(undefined); // Clear any existing transaction data
-        setIsModalOpen(true);
-    };
-
-    // const handleEditTransactionClick = (transaction: Transaction) => {
-    //     setEditingTransaction(transaction); // Set the transaction to be edited
-    //     setIsModalOpen(true);
-    // };
-
-    const handleModalClose = () => {
-        setIsModalOpen(false);
-        setEditingTransaction(undefined); // Clear editing state after closing
-    };
-
-    const handleSaveTransaction = (transaction: Transaction) => {
-        console.log('Transaction saved:', transaction);
-        // In a real application, you would send this 'transaction' object
-        // to your backend API here (e.g., POST for new, PUT/PATCH for edit).
-        // For this example, we'll simulate adding/updating in local state.
-
-        if (transaction.id) {
-            // EDIT MODE: Update existing transaction
-            if (transaction.type === 'expense') {
-                setExpenses(prev => prev.map(exp => exp.id === transaction.id ? transaction as Expense : exp));
-            } else {
-                setIncomes(prev => prev.map(inc => inc.id === transaction.id ? transaction as Income : inc));
-            }
-        } else {
-            // ADD MODE: Add new transaction with a mock ID
-            // Generate a unique ID (in real app, this would be from DB)
-            const newId = Math.max(
-                ...expenses.map(e => e.id || 0), // Use 0 as default if id is undefined
-                ...incomes.map(i => i.id || 0), // Use 0 as default if id is undefined
-                0 // Ensures Math.max works correctly even if arrays are empty
-            ) + 1;
-
-            if (transaction.type === 'expense') {
-                setExpenses(prev => [...prev, { ...(transaction as Expense), id: newId }]);
-            } else {
-                setIncomes(prev => [...prev, { ...(transaction as Income), id: newId }]);
-            }
-        }
-    };
-
+    // Categories with translations
+    const categories = dashboardCategories.map((category: DashboardCategory) => ({
+        ...category,
+        description: safeT(
+            `dashboard.categories.${category.name.toLowerCase()}.description`
+        ),
+    }));
 
     return (
         <div className="min-h-screen" style={{background: 'var(--background)'}}>
@@ -404,7 +195,7 @@ const DashboardPage = () => {
                                     value={totalIncome}
                                     prefix="+"
                                     color="var(--green)"
-                                    formatValue={formatCurrency}
+                                    formatValue={formatCurrencyWithSettings}
                                     t={safeT as TFunction}
                                 />
                                 <StatCard
@@ -412,7 +203,7 @@ const DashboardPage = () => {
                                     value={totalExpenses}
                                     prefix="-"
                                     color="var(--accent)"
-                                    formatValue={formatCurrency}
+                                    formatValue={formatCurrencyWithSettings}
                                     t={safeT as TFunction}
                                 />
                                 <StatCard
@@ -420,7 +211,7 @@ const DashboardPage = () => {
                                     value={Math.abs(netBalance)}
                                     prefix={netBalance >= 0 ? '+' : '-'}
                                     color={netBalance >= 0 ? 'var(--green)' : 'var(--accent)'}
-                                    formatValue={formatCurrency}
+                                    formatValue={formatCurrencyWithSettings}
                                     t={safeT as TFunction}
                                 />
                             </div>
@@ -444,7 +235,7 @@ const DashboardPage = () => {
                                 {safeT('dashboard.income')}
                             </div>
                             <div className="text-lg font-bold" style={{color: 'var(--green)'}}>
-                                {formatCurrency(totalIncome)}
+                                {formatCurrencyWithSettings(totalIncome)}
                             </div>
                         </div>
                         <div
@@ -458,7 +249,7 @@ const DashboardPage = () => {
                                 {safeT('dashboard.expenses')}
                             </div>
                             <div className="text-lg font-bold" style={{color: 'var(--accent)'}}>
-                                {formatCurrency(totalExpenses)}
+                                {formatCurrencyWithSettings(totalExpenses)}
                             </div>
                         </div>
                         <div
@@ -479,7 +270,8 @@ const DashboardPage = () => {
                                     color: netBalance >= 0 ? 'var(--green)' : 'var(--accent)',
                                 }}
                             >
-                                {netBalance >= 0 ? '+' : ''}{formatCurrency(Math.abs(netBalance))}
+                                {netBalance >= 0 ? '+' : ''}
+                                {formatCurrencyWithSettings(Math.abs(netBalance))}
                             </div>
                         </div>
                     </div>
@@ -491,8 +283,8 @@ const DashboardPage = () => {
                         incomes={incomes}
                         expenses={expenses}
                         total={totalIncome}
-                        formatCurrency={formatCurrency}
-                        formatDate={formatDate}
+                        formatCurrency={formatCurrencyWithSettings}
+                        formatDate={formatDateWithSettings}
                         t={safeT as TFunction}
                     />
                 </div>
@@ -513,16 +305,20 @@ const DashboardPage = () => {
                         return (
                             <ExpenseCard
                                 key={category.name}
-                                title={safeT(`dashboard.categories.${category.name.toLowerCase()}.title`)}
+                                title={safeT(
+                                    `dashboard.categories.${category.name.toLowerCase()}.title`
+                                )}
                                 icon={category.icon}
                                 expenses={categoryExpenses}
                                 incomes={incomes}
                                 color={category.color}
                                 total={categoryTotal}
                                 percentage={percentage}
-                                formatCurrency={formatCurrency}
-                                formatDate={formatDate}
+                                formatCurrency={formatCurrencyWithSettings}
+                                formatDate={formatDateWithSettings}
                                 t={safeT as TFunction}
+                                onEdit={handleEditTransactionClick}
+                                onDelete={handleDeleteTransaction}
                             />
                         );
                     })}
@@ -531,8 +327,8 @@ const DashboardPage = () => {
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                     <button
-                        onClick={handleAddTransactionClick} // Connects to modal
-                        className="px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                        onClick={handleAddTransactionClick}
+                        className="px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
                         style={{background: 'var(--primary)', color: 'var(--background)'}}
                     >
                         <Plus className="w-6 h-6"/>
@@ -575,7 +371,8 @@ const DashboardPage = () => {
                             className="p-6 rounded-2xl shadow-lg border-l-4"
                             style={{
                                 background: 'var(--background)',
-                                borderLeftColor: netBalance >= 0 ? 'var(--green)' : 'var(--accent)',
+                                borderLeftColor:
+                                    netBalance >= 0 ? 'var(--green)' : 'var(--accent)',
                                 color: 'var(--text)',
                             }}
                         >
@@ -665,6 +462,7 @@ const DashboardPage = () => {
                     </div>
                 </div>
             </div>
+
             {/* Transaction Modal */}
             <TransactionModal
                 isOpen={isModalOpen}

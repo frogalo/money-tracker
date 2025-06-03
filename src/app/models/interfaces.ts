@@ -1,4 +1,4 @@
-import { Document, Schema } from 'mongoose'; // Import Document and Schema for Mongoose-specific interfaces
+import mongoose, { Document, Schema } from 'mongoose'; // Import Document and Schema for Mongoose-specific interfaces
 
 // --- User Settings Interface ---
 export interface IUserSettings {
@@ -45,17 +45,17 @@ export type MongooseTransactionType = 'income' | 'expense';
 export type MongooseIncomeSourceType = 'salary' | 'investment' | 'transfer' | 'gift' | 'other' | 'refund'; // Keep this consistent
 
 export interface ITransaction extends Document {
-    userId: Schema.Types.ObjectId;
-    type: MongooseTransactionType; // 'income' or 'expense'
+    userId: mongoose.Types.ObjectId;
+    type: MongooseTransactionType;
     amount: number;
     currency: Currency;
     date: Date;
     description: string;
-    category?: string; // For expense category, or income category
-    source?: string; // For expense merchant, or income source name (employer, etc.)
-    incomeType?: MongooseIncomeSourceType; // Specific for income type
-    returnPercentage?: number; // Specific for refund income type
-    linkedTransactionId?: Schema.Types.ObjectId; // MongoDB ID for linking
+    category?: string;
+    source?: string;
+    incomeType?: MongooseIncomeSourceType;
+    returnPercentage?: number;
+    linkedTransactionId?: mongoose.Types.ObjectId; // Use mongoose.Types.ObjectId here
     notes?: string;
     createdAt: Date;
     updatedAt: Date;

@@ -79,7 +79,7 @@
     "showLess": "Pokaż mniej",
     "showMore": "Pokaż {{count}} więcej",
     "noExpenses": "Brak wydatków",
-    "startTracking": "Rozpocznij śledzenie!",
+    "startTracking": "Dodaj transakcję by rozpocząć...",
     "percentageOfTotal": "{{percentage}}% całości",
     "transactions": "{{count}} transakcja",
     "transactions_plural": "{{count}} transakcje",
@@ -91,7 +91,7 @@
     "showLess": "Pokaż mniej",
     "showMore": "Pokaż {{count}} więcej",
     "noIncomeRecorded": "Brak zarejestrowanych przychodów",
-    "addIncomeSources": "Dodaj swoje źródła przychodów!",
+    "addIncomeSources": "Dodaj transakcję by rozpocząć...",
     "totalIncome": "Całkowity przychód",
     "incomeAndEarnings": "Przychody i zarobki"
   },
@@ -143,8 +143,8 @@
     }
   },
   "transactionModal": {
-    "addTransaction": "Dodaj Transakcję",
-    "editTransaction": "Edytuj Transakcję",
+    "addTransaction": "Nowa Transakcja",
+    "editTransaction": "Edycja Transakcji",
     "close": "Zamknij",
     "expense": "Wydatek",
     "income": "Przychód",

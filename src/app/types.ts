@@ -1,8 +1,3 @@
-// src/app/types.ts
-
-// These are for your frontend components (Dashboard, Modal, etc.)
-// They might differ slightly from Mongoose types (e.g., `id: number` vs `_id: ObjectId`)
-
 export type Currency = 'PLN' | 'USD' | 'EUR' | 'GBP';
 
 // Base for frontend transactions
@@ -18,6 +13,7 @@ export interface BaseTransaction {
 
 // Frontend Expense type
 export interface Expense extends BaseTransaction {
+    _id: string;
     type: 'expense';
     category: string; // e.g., 'Groceries', 'Utilities', 'Rent', 'Fun'
     source?: string; // e.g., "Amazon", "Local Cafe"
