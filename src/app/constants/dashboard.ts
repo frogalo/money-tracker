@@ -11,7 +11,7 @@ import {
     Currency,
     ExpenseCategory,
     IncomeCategory,
-    IncomeSourceType,
+    // IncomeSourceType,
 } from '@/app/types';
 
 export const availableCurrencies: Currency[] = ['PLN', 'USD', 'EUR', 'GBP'];
@@ -34,14 +34,14 @@ export const incomeCategories: IncomeCategory[] = [
     'Other',
 ];
 
-export const incomeSourceTypes: IncomeSourceType[] = [
-    'salary',
-    'investment',
-    'transfer',
-    'gift',
-    'other',
-    'refund',
-];
+// export const incomeSourceTypes: IncomeSourceType[] = [
+//     'salary',
+//     'investment',
+//     'transfer',
+//     'gift',
+//     'other',
+//     'refund',
+// ];
 
 export const currencySymbols = {
     PLN: 'zł',

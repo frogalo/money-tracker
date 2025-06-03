@@ -1,30 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { X, DollarSign, Tag, FileText } from 'lucide-react';
+import { X, DollarSign, Tag, FileText, Trash2, Loader2 } from 'lucide-react';
 import { TFunction } from 'i18next';
-import { Transaction, Currency, ExpenseCategory, IncomeCategory, Income, Expense } from '@/app/types';
+import {
+    Transaction,
+    Currency,
+    ExpenseCategory,
+    IncomeCategory,
+    Income,
+    Expense,
+} from '@/app/types';
 
 interface TransactionModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (transaction: Transaction) => void;
-    initialTransaction?: Expense | Income; // Allow both Expense and Income types
+    onSave: (transaction: Transaction, mode: 'add' | 'edit') => void;
+    onDelete?: (transaction: Transaction) => void;
+    initialTransaction?: Expense | Income;
     t: TFunction;
     availableCurrencies: Currency[];
     defaultCurrency: Currency;
     expenseCategories: ExpenseCategory[];
     incomeCategories: IncomeCategory[];
+    isLoading?: boolean;
 }
 
 const TransactionModal: React.FC<TransactionModalProps> = ({
                                                                isOpen,
                                                                onClose,
                                                                onSave,
+                                                               onDelete,
                                                                initialTransaction,
                                                                t,
                                                                availableCurrencies,
                                                                defaultCurrency,
                                                                expenseCategories,
                                                                incomeCategories,
+                                                               isLoading = false,
                                                            }) => {
     const [formData, setFormData] = useState({
         type: 'expense' as 'expense' | 'income',
@@ -33,7 +44,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
         category: '',
         currency: defaultCurrency,
         date: new Date().toISOString().split('T')[0],
-        source: '', // For income-specific properties
+        source: '',
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -46,8 +57,13 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 description: initialTransaction.description || '',
                 category: initialTransaction.category || '',
                 currency: initialTransaction.currency || defaultCurrency,
-                date: initialTransaction.date ? initialTransaction.date.split('T')[0] : new Date().toISOString().split('T')[0],
-                source: initialTransaction.type === 'income' ? initialTransaction.source || '' : '', // Only for income
+                date: initialTransaction.date
+                    ? initialTransaction.date.split('T')[0]
+                    : new Date().toISOString().split('T')[0],
+                source:
+                    initialTransaction.type === 'income'
+                        ? (initialTransaction as Income).source || ''
+                        : '',
             });
         } else {
             setFormData({
@@ -57,23 +73,30 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 category: '',
                 currency: defaultCurrency,
                 date: new Date().toISOString().split('T')[0],
-                source: '', // Default to empty string
+                source: '',
             });
         }
         setErrors({});
     }, [initialTransaction, defaultCurrency, isOpen]);
 
     const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
             [field]: value,
         }));
 
-        // Clear error when user starts typing
         if (errors[field]) {
-            setErrors(prev => ({
+            setErrors((prev) => ({
                 ...prev,
                 [field]: '',
+            }));
+        }
+
+        // Clear category when switching transaction type
+        if (field === 'type') {
+            setFormData((prev) => ({
+                ...prev,
+                category: '',
             }));
         }
     };
@@ -81,18 +104,19 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
 
-        if (!formData.amount || isNaN(Number(formData.amount)) || Number(formData.amount) <= 0) {
+        if (
+            !formData.amount ||
+            isNaN(Number(formData.amount)) ||
+            Number(formData.amount) <= 0
+        ) {
             newErrors.amount = t('transactionModal.validation.amount');
         }
-
         if (!formData.description.trim()) {
             newErrors.description = t('transactionModal.validation.description');
         }
-
         if (!formData.category) {
             newErrors.category = t('transactionModal.validation.category');
         }
-
         if (!formData.date) {
             newErrors.date = t('transactionModal.validation.date');
         }
@@ -103,40 +127,43 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!validateForm()) {
-            return;
-        }
+        if (!validateForm() || isLoading) return;
 
         let transaction: Transaction;
+        const baseTransaction = {
+            id: initialTransaction?.id || undefined,
+            amount: Number(formData.amount),
+            description: formData.description,
+            category: formData.category,
+            currency: formData.currency,
+            date: formData.date,
+        };
 
         if (formData.type === 'income') {
-            // Handle Income-specific properties
             transaction = {
-                id: initialTransaction?.id,
+                ...baseTransaction,
                 type: 'income',
-                amount: Number(formData.amount),
-                description: formData.description,
-                category: formData.category, // Use category for income
-                currency: formData.currency,
-                date: formData.date,
-                source: formData.description || t('transactionModal.sourcePlaceholder'), // Provide a default source if not specified
-            } as Income; // Explicitly cast to Income
+                source: formData.source || formData.description,
+            } as Income;
         } else {
-            // Handle Expense-specific properties
             transaction = {
-                id: initialTransaction?.id,
+                ...baseTransaction,
                 type: 'expense',
-                amount: Number(formData.amount),
-                description: formData.description,
-                category: formData.category,
-                currency: formData.currency,
-                date: formData.date,
-            } as Expense; // Explicitly cast to Expense
+            } as Expense;
         }
 
-        onSave(transaction);
-        onClose();
+        onSave(transaction, initialTransaction ? 'edit' : 'add');
+    };
+
+    const handleDelete = () => {
+        if (initialTransaction && onDelete && !isLoading) {
+            const confirmMessage =
+                t('transactionModal.confirmDelete') ||
+                'Are you sure you want to delete this transaction?';
+            if (confirm(confirmMessage)) {
+                onDelete(initialTransaction);
+            }
+        }
     };
 
     if (!isOpen) return null;
@@ -154,24 +181,54 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             {/* Header */}
             <div
                 className="flex items-center justify-between p-6 border-b"
-                style={{ borderColor: 'var(--border, rgba(255, 255, 255, 0.1))' }}
+                style={{
+                    borderColor: 'var(--border, rgba(255, 255, 255, 0.1))',
+                }}
             >
                 <h2 className="text-2xl font-bold">
                     {initialTransaction
                         ? t('transactionModal.editTransaction')
-                        : t('transactionModal.addTransaction')
-                    }
+                        : t('transactionModal.addTransaction')}
                 </h2>
-                <button
-                    onClick={onClose}
-                    className="p-2 rounded-full hover:bg-opacity-20 transition-colors duration-200 cursor-pointer"
-                    style={{
-                        backgroundColor: 'var(--text)',
-                        opacity: 0.8, // Increase opacity for better visibility
-                    }}
-                >
-                    <X className="w-6 h-6" style={{ color: 'var(--background)' }} /> {/* Explicitly set icon color */}
-                </button>
+                <div className="flex gap-2">
+                    {initialTransaction && onDelete && (
+                        <button
+                            onClick={handleDelete}
+                            disabled={isLoading}
+                            className="p-2 rounded-full hover:bg-red-100 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={t('transactionModal.delete') || 'Delete'}
+                            style={{
+                                backgroundColor: 'rgba(239,68,68,0.1)',
+                            }}
+                        >
+                            {isLoading ? (
+                                <Loader2
+                                    className="w-6 h-6 animate-spin"
+                                    style={{ color: '#ef4444' }}
+                                />
+                            ) : (
+                                <Trash2
+                                    className="w-6 h-6"
+                                    style={{ color: '#ef4444' }}
+                                />
+                            )}
+                        </button>
+                    )}
+                    <button
+                        onClick={onClose}
+                        disabled={isLoading}
+                        className="p-2 rounded-full hover:bg-opacity-20 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                            backgroundColor: 'var(--text)',
+                            opacity: 0.8,
+                        }}
+                    >
+                        <X
+                            className="w-6 h-6"
+                            style={{ color: 'var(--background)' }}
+                        />
+                    </button>
+                </div>
             </div>
 
             {/* Form */}
@@ -185,19 +242,22 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                         <button
                             type="button"
                             onClick={() => handleInputChange('type', 'expense')}
-                            className={`cursor-pointer p-4 rounded-xl font-medium transition-all duration-200 border-2 ${
+                            disabled={isLoading}
+                            className={`cursor-pointer p-4 rounded-xl font-medium transition-all duration-200 border-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                                 formData.type === 'expense'
                                     ? 'shadow-lg'
                                     : 'opacity-60 hover:opacity-80'
                             }`}
                             style={{
-                                backgroundColor: formData.type === 'expense'
-                                    ? 'var(--accent)'
-                                    : 'transparent',
+                                backgroundColor:
+                                    formData.type === 'expense'
+                                        ? 'var(--accent)'
+                                        : 'transparent',
                                 borderColor: 'var(--accent)',
-                                color: formData.type === 'expense'
-                                    ? 'var(--background)'
-                                    : 'var(--accent)',
+                                color:
+                                    formData.type === 'expense'
+                                        ? 'var(--background)'
+                                        : 'var(--accent)',
                             }}
                         >
                             {t('transactionModal.expense')}
@@ -205,19 +265,22 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                         <button
                             type="button"
                             onClick={() => handleInputChange('type', 'income')}
-                            className={`cursor-pointer p-4 rounded-xl font-medium transition-all duration-200 border-2 ${
+                            disabled={isLoading}
+                            className={`cursor-pointer p-4 rounded-xl font-medium transition-all duration-200 border-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                                 formData.type === 'income'
                                     ? 'shadow-lg'
                                     : 'opacity-60 hover:opacity-80'
                             }`}
                             style={{
-                                backgroundColor: formData.type === 'income'
-                                    ? 'var(--green)'
-                                    : 'transparent',
+                                backgroundColor:
+                                    formData.type === 'income'
+                                        ? 'var(--green)'
+                                        : 'transparent',
                                 borderColor: 'var(--green)',
-                                color: formData.type === 'income'
-                                    ? 'var(--background)'
-                                    : 'var(--green)',
+                                color:
+                                    formData.type === 'income'
+                                        ? 'var(--background)'
+                                        : 'var(--green)',
                             }}
                         >
                             {t('transactionModal.income')}
@@ -232,21 +295,23 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                             {t('transactionModal.amount')}
                         </label>
                         <div className="relative">
-                            <DollarSign
-                                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-60"
-                            />
+                            <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-60" />
                             <input
                                 type="number"
                                 step="0.01"
                                 value={formData.amount}
-                                onChange={(e) => handleInputChange('amount', e.target.value)}
-                                className={`w-full pl-10 pr-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 ${
+                                onChange={(e) =>
+                                    handleInputChange('amount', e.target.value)
+                                }
+                                disabled={isLoading}
+                                className={`w-full pl-10 pr-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                                     errors.amount
                                         ? 'border-red-500 focus:ring-red-500/20'
                                         : 'focus:ring-blue-500/20'
                                 }`}
                                 style={{
-                                    backgroundColor: 'var(--card-bg, rgba(255, 255, 255, 0.05))',
+                                    backgroundColor:
+                                        'var(--card-bg, rgba(255, 255, 255, 0.05))',
                                     borderColor: errors.amount
                                         ? '#ef4444'
                                         : 'var(--border, rgba(255, 255, 255, 0.1))',
@@ -256,7 +321,9 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                             />
                         </div>
                         {errors.amount && (
-                            <p className="text-sm text-red-500">{errors.amount}</p>
+                            <p className="text-sm text-red-500">
+                                {errors.amount}
+                            </p>
                         )}
                     </div>
 
@@ -266,11 +333,16 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                         </label>
                         <select
                             value={formData.currency}
-                            onChange={(e) => handleInputChange('currency', e.target.value)}
-                            className="cursor-pointer w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            onChange={(e) =>
+                                handleInputChange('currency', e.target.value)
+                            }
+                            disabled={isLoading}
+                            className="cursor-pointer w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{
-                                backgroundColor: 'var(--card-bg, rgba(255, 255, 255, 0.05))',
-                                borderColor: 'var(--border, rgba(255, 255, 255, 0.1))',
+                                backgroundColor:
+                                    'var(--card-bg, rgba(255, 255, 255, 0.05))',
+                                borderColor:
+                                    'var(--border, rgba(255, 255, 255, 0.1))',
                                 color: 'var(--text)',
                             }}
                         >
@@ -289,30 +361,36 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                         {t('transactionModal.description')}
                     </label>
                     <div className="relative">
-                        <FileText
-                            className="absolute left-3 top-3 w-5 h-5 opacity-60"
-                        />
+                        <FileText className="absolute left-3 top-3 w-5 h-5 opacity-60" />
                         <input
                             type="text"
                             value={formData.description}
-                            onChange={(e) => handleInputChange('description', e.target.value)}
-                            className={`w-full pl-10 pr-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 ${
+                            onChange={(e) =>
+                                handleInputChange('description', e.target.value)
+                            }
+                            disabled={isLoading}
+                            className={`w-full pl-10 pr-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                                 errors.description
                                     ? 'border-red-500 focus:ring-red-500/20'
                                     : 'focus:ring-blue-500/20'
                             }`}
                             style={{
-                                backgroundColor: 'var(--card-bg, rgba(255, 255, 255, 0.05))',
+                                backgroundColor:
+                                    'var(--card-bg, rgba(255, 255, 255, 0.05))',
                                 borderColor: errors.description
                                     ? '#ef4444'
                                     : 'var(--border, rgba(255, 255, 255, 0.1))',
                                 color: 'var(--text)',
                             }}
-                            placeholder={t('transactionModal.descriptionPlaceholder')}
+                            placeholder={t(
+                                'transactionModal.descriptionPlaceholder'
+                            )}
                         />
                     </div>
                     {errors.description && (
-                        <p className="text-sm text-red-500">{errors.description}</p>
+                        <p className="text-sm text-red-500">
+                            {errors.description}
+                        </p>
                     )}
                 </div>
 
@@ -322,35 +400,46 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                         {t('transactionModal.category')}
                     </label>
                     <div className="relative">
-                        <Tag
-                            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-60"
-                        />
+                        <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 opacity-60" />
                         <select
                             value={formData.category}
-                            onChange={(e) => handleInputChange('category', e.target.value)}
-                            className={`cursor-pointer w-full pl-10 pr-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 ${
+                            onChange={(e) =>
+                                handleInputChange('category', e.target.value)
+                            }
+                            disabled={isLoading}
+                            className={`cursor-pointer w-full pl-10 pr-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                                 errors.category
                                     ? 'border-red-500 focus:ring-red-500/20'
                                     : 'focus:ring-blue-500/20'
                             }`}
                             style={{
-                                backgroundColor: 'var(--card-bg, rgba(255, 255, 255, 0.05))',
+                                backgroundColor:
+                                    'var(--card-bg, rgba(255, 255, 255, 0.05))',
                                 borderColor: errors.category
                                     ? '#ef4444'
                                     : 'var(--border, rgba(255, 255, 255, 0.1))',
                                 color: 'var(--text)',
                             }}
                         >
-                            <option value="">{t('transactionModal.selectCategory')}</option>
-                            {(formData.type === 'expense' ? expenseCategories : incomeCategories).map((category) => (
+                            <option value="">
+                                {t('transactionModal.selectCategory')}
+                            </option>
+                            {(formData.type === 'expense'
+                                    ? expenseCategories
+                                    : incomeCategories
+                            ).map((category) => (
                                 <option key={category} value={category}>
-                                    {t(`transactionModal.categories.${category.toLowerCase()}`)}
+                                    {t(
+                                        `transactionModal.categories.${category.toLowerCase()}`
+                                    )}
                                 </option>
                             ))}
                         </select>
                     </div>
                     {errors.category && (
-                        <p className="text-sm text-red-500">{errors.category}</p>
+                        <p className="text-sm text-red-500">
+                            {errors.category}
+                        </p>
                     )}
                 </div>
 
@@ -363,14 +452,18 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                         <input
                             type="date"
                             value={formData.date}
-                            onChange={(e) => handleInputChange('date', e.target.value)}
-                            className={`w-full pl-3 pr-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 ${
+                            onChange={(e) =>
+                                handleInputChange('date', e.target.value)
+                            }
+                            disabled={isLoading}
+                            className={`w-full pl-3 pr-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                                 errors.date
                                     ? 'border-red-500 focus:ring-red-500/20'
                                     : 'focus:ring-blue-500/20'
                             }`}
                             style={{
-                                backgroundColor: 'var(--card-bg, rgba(255, 255, 255, 0.05))',
+                                backgroundColor:
+                                    'var(--card-bg, rgba(255, 255, 255, 0.05))',
                                 borderColor: errors.date
                                     ? '#ef4444'
                                     : 'var(--border, rgba(255, 255, 255, 0.1))',
@@ -388,7 +481,8 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="cursor-pointer flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-200 border-2 hover:opacity-80"
+                        disabled={isLoading}
+                        className="cursor-pointer flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-200 border-2 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{
                             backgroundColor: 'transparent',
                             borderColor: 'var(--text)',
@@ -399,13 +493,19 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                     </button>
                     <button
                         type="submit"
-                        className="cursor-pointer flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:opacity-90 shadow-lg"
+                        disabled={isLoading}
+                        className="cursor-pointer flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:opacity-90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         style={{
                             backgroundColor: 'var(--primary)',
                             color: 'var(--background)',
                         }}
                     >
-                        {initialTransaction ? t('transactionModal.updateTransaction') : t('transactionModal.saveTransaction')}
+                        {isLoading && (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        )}
+                        {initialTransaction
+                            ? t('transactionModal.updateTransaction')
+                            : t('transactionModal.saveTransaction')}
                     </button>
                 </div>
             </form>

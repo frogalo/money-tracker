@@ -5,13 +5,13 @@ import User from '@/app/models/User';
 import Transaction from '@/app/models/Transaction';
 import dbConnect from '@/app/lib/mongodb';
 import { ITransaction, Currency, MongooseIncomeSourceType, MongooseTransactionType } from '@/app/models/interfaces';
-import mongoose from 'mongoose'; // Import mongoose
+import mongoose from 'mongoose';
 
 // Helper to get current month's start and end dates
 function getCurrentMonthDateRange() {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // Last ms of the month
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
     return { startOfMonth, endOfMonth };
 }
 
@@ -34,7 +34,7 @@ export async function POST(
     request: NextRequest,
     context: { params: Promise<{ userId: string }> }
 ) {
-    const { userId } = await context.params; // Await params here
+    const { userId } = await context.params;
     await dbConnect();
     const auth = await authorizeRequest(request, userId);
     if (!auth.authorized) return auth.response;
@@ -108,7 +108,14 @@ export async function POST(
             throw new Error('Failed to link transaction to user');
         }
 
-        return NextResponse.json({ success: true, transaction: newTransaction }, { status: 201 });
+        return NextResponse.json({
+            success: true,
+            transaction: {
+                ...newTransaction.toObject(),
+                id: newTransaction._id.toString() // Ensure id is mapped correctly
+            },
+            id: newTransaction._id.toString() // Also provide id at root level
+        }, { status: 201 });
     } catch (error) {
         console.error('Error adding transaction:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -130,109 +137,13 @@ export async function GET(
         const { startOfMonth, endOfMonth } = getCurrentMonthDateRange();
 
         const transactions = await Transaction.find({
-            userId: new mongoose.Types.ObjectId(userId), // Properly cast userId to ObjectId
+            userId: new mongoose.Types.ObjectId(userId),
             date: { $gte: startOfMonth, $lte: endOfMonth },
         }).sort({ date: -1, createdAt: -1 });
 
         return NextResponse.json({ success: true, transactions });
     } catch (error) {
         console.error('Error fetching transactions:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    }
-}
-
-// PUT: Update an existing transaction
-export async function PUT(
-    request: NextRequest,
-    { params }: { params: { userId: string, transactionId: string } }
-) {
-    await dbConnect();
-    const auth = await authorizeRequest(request, params.userId);
-    if (!auth.authorized) return auth.response;
-    const { userId } = auth;
-
-    try {
-        const { transactionId } = params;
-        const body: Partial<ITransaction> = await request.json();
-
-        const updateFields: Partial<ITransaction> = {};
-        const allowedUpdateFields = ['amount', 'currency', 'date', 'description', 'category', 'source', 'incomeType', 'returnPercentage', 'linkedTransactionId', 'notes'];
-
-        for (const field of allowedUpdateFields) {
-            if (body[field as keyof Partial<ITransaction>] !== undefined) {
-                updateFields[field as keyof Partial<ITransaction>] = body[field as keyof Partial<ITransaction>];
-            }
-        }
-
-        if (Object.keys(updateFields).length === 0) {
-            return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
-        }
-
-        const updatedTransaction = await Transaction.findOneAndUpdate(
-            { _id: transactionId, userId: new mongoose.Types.ObjectId(userId) }, // Properly cast userId to ObjectId
-            { $set: updateFields },
-            { new: true, runValidators: true }
-        );
-
-        if (!updatedTransaction) {
-            return NextResponse.json({ error: 'Transaction not found or does not belong to user' }, { status: 404 });
-        }
-
-        return NextResponse.json({ success: true, transaction: updatedTransaction });
-    } catch (error) {
-        console.error('Error updating transaction:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    }
-}
-
-// DELETE: Delete a transaction
-export async function DELETE(
-    request: NextRequest,
-    { params }: { params: { userId: string, transactionId: string } }
-) {
-    await dbConnect();
-    const auth = await authorizeRequest(request, params.userId);
-    if (!auth.authorized) return auth.response;
-    const { userId } = auth;
-
-    try {
-        const { transactionId } = params;
-
-        const session = await dbConnect().then((mongoose) => mongoose.connection.startSession());
-        session.startTransaction();
-
-        try {
-            const deletedTransaction = await Transaction.findOneAndDelete(
-                { _id: transactionId, userId: new mongoose.Types.ObjectId(userId) }, // Properly cast userId to ObjectId
-                { session }
-            );
-
-            if (!deletedTransaction) {
-                await session.abortTransaction();
-                return NextResponse.json({ error: 'Transaction not found or does not belong to user' }, { status: 404 });
-            }
-
-            const userUpdateResult = await User.findByIdAndUpdate(
-                userId,
-                { $pull: { transactions: deletedTransaction._id } },
-                { new: true, session }
-            );
-
-            if (!userUpdateResult) {
-                throw new Error('Failed to unlink transaction from user');
-            }
-
-            await session.commitTransaction();
-            return NextResponse.json({ success: true, message: 'Transaction deleted successfully' });
-        } catch (error) {
-            await session.abortTransaction();
-            console.error('Transaction deletion/unlinking failed:', error);
-            return NextResponse.json({ error: 'Failed to delete transaction due to database error' }, { status: 500 });
-        } finally {
-            session.endSession();
-        }
-    } catch (error) {
-        console.error('Error deleting transaction:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
