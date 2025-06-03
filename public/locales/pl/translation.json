@@ -160,7 +160,26 @@
     "source": "Źródło",
     "sourcePlaceholder": "np. Wynagrodzenie",
     "incomeType": "Typ Przychodu",
-    "incomeTypes": {
+    "saveTransaction": "Zapisz",
+    "updateTransaction": "Zmień",
+    "cancel": "Anuluj",
+    "transactionType":"Typ Transakcji",
+    "sourceType":"Typ Transakcji",
+    "categories": {
+      "survival": "Potrzeby",
+      "growth": "Rozwój",
+      "fun": "Rozrywka",
+      "restaurants": "Restauracje",
+      "mobility": "Mobilność",
+      "groceries": "Zakupy spożywcze",
+      "other": "Inne",
+      "salary": "Wynagrodzenie",
+      "investment": "Inwestycja",
+      "transfer": "Przelew",
+      "gift": "Prezent",
+      "refund": "Zwrot"
+    },
+    "sourceTypes": {
       "salary": "Wynagrodzenie",
       "investment": "Inwestycja",
       "transfer": "Przelew",

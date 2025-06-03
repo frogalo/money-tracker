@@ -115,7 +115,6 @@
     "ofSpending": "of spending",
     "investedInFuture": "invested in future",
     "onEntertainment": "on entertainment",
-    "incomeAndEarning": "tt",
     "categories": {
       "survival": {
         "title": "Survival",
@@ -161,7 +160,26 @@
     "source": "Source",
     "sourcePlaceholder": "e.g., Salary",
     "incomeType": "Income Type",
-    "incomeTypes": {
+    "saveTransaction": "Save",
+    "updateTransaction": "Update",
+    "cancel": "Cancel",
+    "transactionType": "Transaction Type",
+    "sourceType": "Transaction Type",
+    "categories": {
+      "survival": "Survival",
+      "growth": "Growth",
+      "fun": "Fun",
+      "restaurants": "Restaurants",
+      "mobility": "Mobility",
+      "groceries": "Groceries",
+      "other": "Other",
+      "salary": "Salary",
+      "investment": "Investment",
+      "transfer": "Transfer",
+      "gift": "Gift",
+      "refund": "Refund"
+    },
+    "sourceTypes": {
       "salary": "Salary",
       "investment": "Investment",
       "transfer": "Transfer",
