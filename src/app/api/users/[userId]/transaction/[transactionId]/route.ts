@@ -1,25 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/lib/auth';
 import User from '@/app/models/User';
 import Transaction from '@/app/models/Transaction';
 import dbConnect from '@/app/lib/mongodb';
 import { ITransaction } from '@/app/models/interfaces';
 import mongoose from 'mongoose';
-
-// Common function to verify user and authorization
-async function authorizeRequest(request: NextRequest, userId: string) {
-    const session = await getServerSession(authOptions);
-
-    if (!session || !session.user || !session.user.id) {
-        return { authorized: false, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-    }
-
-    if (session.user.id !== userId) {
-        return { authorized: false, response: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) };
-    }
-    return { authorized: true, userId: session.user.id };
-}
+import {authorizeRequest} from "@/app/api/helper";
 
 // PUT: Update an existing transaction
 export async function PUT(

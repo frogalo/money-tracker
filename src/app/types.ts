@@ -52,3 +52,18 @@ export type IncomeCategory =
     | 'Gift'
     | 'Refund'
     | 'Other'; // These are more for the 'category' field on income
+
+export type TransactionRequestBody = {
+    type: 'income' | 'expense';
+    amount: number;
+    currency: Currency;
+    date: string;
+    description: string;
+    // For expense:
+    category?: ExpenseCategory;
+    // For income:
+    incomeType?: IncomeSourceType;
+    source?: string;
+    returnPercentage?: number;
+    linkedTransactionId?: string;
+};

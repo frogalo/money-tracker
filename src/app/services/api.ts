@@ -1,12 +1,13 @@
-import { Session } from 'next-auth';
-import { Transaction, Expense, Income } from '@/app/types';
-import { UserSettings, getDefaultSettings } from '@/app/types/settings';
+import {Session} from 'next-auth';
+import {Transaction, Expense, Income} from '@/app/types';
+import {UserSettings, getDefaultSettings} from '@/app/types/settings';
+
 
 export const fetchTransactions = async (
     session: Session | null
 ): Promise<{ expenses: Expense[]; incomes: Income[] }> => {
     if (!session?.user?.id) {
-        return { expenses: [], incomes: [] };
+        return {expenses: [], incomes: []};
     }
 
     try {
@@ -21,17 +22,17 @@ export const fetchTransactions = async (
                 (t: Transaction) => t.type === 'income'
             ) as Income[];
 
-            return { expenses: fetchedExpenses, incomes: fetchedIncomes };
+            return {expenses: fetchedExpenses, incomes: fetchedIncomes};
         } else {
             console.error(
                 'Failed to fetch transactions:',
                 data.error || 'Unknown error'
             );
-            return { expenses: [], incomes: [] };
+            return {expenses: [], incomes: []};
         }
     } catch (error) {
         console.error('Error fetching transactions:', error);
-        return { expenses: [], incomes: [] };
+        return {expenses: [], incomes: []};
     }
 };
 

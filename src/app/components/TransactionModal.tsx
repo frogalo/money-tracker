@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, DollarSign, Tag, FileText, Trash2, Loader2 } from 'lucide-react';
+import { X, DollarSign, Tag, FileText, Trash2, Loader2, Building2 } from 'lucide-react';
 import { TFunction } from 'i18next';
 import {
     Transaction,
@@ -9,6 +9,7 @@ import {
     Income,
     Expense,
 } from '@/app/types';
+import {incomeCategories} from "@/app/constants/dashboard";
 
 interface TransactionModalProps {
     isOpen: boolean;
@@ -24,6 +25,7 @@ interface TransactionModalProps {
     isLoading?: boolean;
 }
 
+
 const TransactionModal: React.FC<TransactionModalProps> = ({
                                                                isOpen,
                                                                onClose,
@@ -34,17 +36,16 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                                                                availableCurrencies,
                                                                defaultCurrency,
                                                                expenseCategories,
-                                                               incomeCategories,
                                                                isLoading = false,
                                                            }) => {
     const [formData, setFormData] = useState({
         type: 'expense' as 'expense' | 'income',
         amount: '',
         description: '',
+        source: '',
         category: '',
         currency: defaultCurrency,
         date: new Date().toISOString().split('T')[0],
-        source: '',
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -52,28 +53,25 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     useEffect(() => {
         if (initialTransaction) {
             setFormData({
-                type: initialTransaction.type || 'expense',
+                type: initialTransaction.type,
                 amount: initialTransaction.amount?.toString() || '',
                 description: initialTransaction.description || '',
+                source: initialTransaction.source || '',
                 category: initialTransaction.category || '',
                 currency: initialTransaction.currency || defaultCurrency,
                 date: initialTransaction.date
                     ? initialTransaction.date.split('T')[0]
                     : new Date().toISOString().split('T')[0],
-                source:
-                    initialTransaction.type === 'income'
-                        ? (initialTransaction as Income).source || ''
-                        : '',
             });
         } else {
             setFormData({
                 type: 'expense',
                 amount: '',
                 description: '',
+                source: '',
                 category: '',
                 currency: defaultCurrency,
                 date: new Date().toISOString().split('T')[0],
-                source: '',
             });
         }
         setErrors({});
@@ -134,6 +132,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             id: initialTransaction?.id || undefined,
             amount: Number(formData.amount),
             description: formData.description,
+            source: formData.source || undefined,
             category: formData.category,
             currency: formData.currency,
             date: formData.date,
@@ -143,7 +142,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             transaction = {
                 ...baseTransaction,
                 type: 'income',
-                source: formData.source || formData.description,
             } as Income;
         } else {
             transaction = {
@@ -392,6 +390,33 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                             {errors.description}
                         </p>
                     )}
+                </div>
+
+                {/* Source (Company/Shop/Employer/Person) */}
+                <div className="space-y-2">
+                    <label className="block text-sm font-medium opacity-80">
+                        {t('transactionModal.source') || 'Source (company/shop/person)'}
+                    </label>
+                    <div className="relative">
+                        <Building2 className="absolute left-3 top-3 w-5 h-5 opacity-60" />
+                        <input
+                            type="text"
+                            value={formData.source}
+                            onChange={(e) =>
+                                handleInputChange('source', e.target.value)
+                            }
+                            disabled={isLoading}
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{
+                                backgroundColor:
+                                    'var(--card-bg, rgba(255, 255, 255, 0.05))',
+                                borderColor:
+                                    'var(--border, rgba(255, 255, 255, 0.1))',
+                                color: 'var(--text)',
+                            }}
+                            placeholder={t('transactionModal.sourcePlaceholder') || 'e.g. Amazon, Employer, John Doe'}
+                        />
+                    </div>
                 </div>
 
                 {/* Category */}

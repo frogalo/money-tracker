@@ -78,7 +78,7 @@ const Header = () => {
     }
 
     return (
-        <header className="fixed top-0 left-0 w-full bg-[var(--background)] bg-opacity-25 text-[var(--text)] py-4 z-30">
+        <header className="fixed top-0 left-0 w-full bg-[var(--background)] bg-opacity-25 text-[var(--text)] py-4 z-130">
             <div className="container mx-auto flex items-center justify-between">
                 <Link href="/" className="text-xl font-bold text-[var(--green)]">
                     Money Tracker

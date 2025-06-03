@@ -1,20 +1,21 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
     LucideIcon,
     ChevronDown,
     ChevronUp,
-    RotateCcw, Trash2, Edit
+    Trash2,
+    Edit,
 } from 'lucide-react';
-import {TFunction} from 'i18next';
-import {Expense, Income} from "@/app/types";
+import { TFunction } from 'i18next';
+import { Expense, Income } from '@/app/types';
 
 interface ExpenseCardProps {
     title: string;
     icon: LucideIcon;
     expenses: Expense[];
-    incomes: Income[];
+    incomes: Income[]; // Not used anymore, but kept for prop compatibility
     color: string;
     total: number;
     percentage: number;
@@ -32,14 +33,13 @@ interface GroupedExpense {
     count: number;
     latestDate: string;
     transactions: Expense[];
-    origins: Set<string>; // Use a Set to track unique origins
+    origins: Set<string>;
 }
 
 const ExpenseCard: React.FC<ExpenseCardProps> = ({
                                                      title,
                                                      icon: Icon,
                                                      expenses,
-                                                     incomes,
                                                      color,
                                                      total,
                                                      percentage,
@@ -51,7 +51,7 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
                                                  }) => {
     const [showAll, setShowAll] = useState(false);
     const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-    const [hoveredExpense, setHoveredExpense] = useState<string | null>(null); // Track hovered expense
+    const [hoveredExpense, setHoveredExpense] = useState<string | null>(null);
 
     const toggleExpanded = (desc: string) => {
         const s = new Set(expandedItems);
@@ -63,29 +63,27 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
         setExpandedItems(s);
     };
 
-    const getLinkedIncome = (expId: number | undefined): Income | undefined =>
-        incomes.find((i) => i.linkedExpenseId === expId);
-
-    // Group expenses by description
+    // Group expenses by description and currency (to avoid key collision)
     const grouped = expenses.reduce(
         (acc: { [k: string]: GroupedExpense }, e) => {
-            if (acc[e.description]) {
-                acc[e.description].totalAmount += e.amount;
-                acc[e.description].transactions.push(e);
-                acc[e.description].count++;
-                acc[e.description].origins.add(e.source || ''); // Add origin to the Set
-                if (new Date(e.date) > new Date(acc[e.description].latestDate)) {
-                    acc[e.description].latestDate = e.date;
+            const groupKey = `${e.description}__${e.currency}`;
+            if (acc[groupKey]) {
+                acc[groupKey].totalAmount += e.amount;
+                acc[groupKey].transactions.push(e);
+                acc[groupKey].count++;
+                acc[groupKey].origins.add(e.source || '');
+                if (new Date(e.date) > new Date(acc[groupKey].latestDate)) {
+                    acc[groupKey].latestDate = e.date;
                 }
             } else {
-                acc[e.description] = {
+                acc[groupKey] = {
                     description: e.description,
                     totalAmount: e.amount,
                     currency: e.currency,
                     count: 1,
                     latestDate: e.date,
                     transactions: [e],
-                    origins: new Set([e.source || '']), // Initialize the Set with the first origin
+                    origins: new Set([e.source || '']),
                 };
             }
             return acc;
@@ -102,16 +100,16 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
             style={{
                 background: 'var(--background)',
                 borderColor: color,
-                color: 'var(--text)'
+                color: 'var(--text)',
             }}
         >
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold flex items-center gap-3" style={{color}}>
+                <h2 className="text-2xl font-bold flex items-center gap-3" style={{ color }}>
                     <div
                         className="p-2 rounded-lg"
-                        style={{background: color, color: 'var(--background)'}}
+                        style={{ background: color, color: 'var(--background)' }}
                     >
-                        <Icon className="w-6 h-6"/>
+                        <Icon className="w-6 h-6" />
                     </div>
                     {title}
                 </h2>
@@ -122,7 +120,7 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
                         color: 'var(--background)',
                         top: '-12px',
                         right: '-14px',
-                        zIndex: 10
+                        zIndex: 10,
                     }}
                 >
                     {formatCurrency(total)}
@@ -133,14 +131,14 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
             <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
                     <span className="text-sm opacity-70">
-                        {t('expenseCard.percentageOfTotal', {percentage: percentage.toFixed(1)})}
+                        {t('expenseCard.percentageOfTotal', { percentage: percentage.toFixed(1) })}
                     </span>
                     <span className="text-sm opacity-70">
-                        {t('expenseCard.transactions', {count: expenses.length, count_plural: expenses.length})}
+                        {t('expenseCard.transactions', { count: expenses.length, count_plural: expenses.length })}
                     </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2" style={{background: `${color}20`}}>
-                    <div className="h-2 rounded-full" style={{width: `${percentage}%`, background: color}}/>
+                <div className="w-full bg-gray-200 rounded-full h-2" style={{ background: `${color}20` }}>
+                    <div className="h-2 rounded-full" style={{ width: `${percentage}%`, background: color }} />
                 </div>
             </div>
 
@@ -148,106 +146,93 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
             <div className="space-y-3 flex-grow overflow-y-auto pr-2 custom-scrollbar">
                 {groups.length ? (
                     <>
-                        {shown.map((g) => (
-                            <div key={g.description}>
-                                <div
-                                    className="flex justify-between items-center p-4 rounded-lg hover:shadow-md transition-all duration-200 relative"
-                                    onClick={() => g.count > 1 && toggleExpanded(g.description)}
-                                    onMouseEnter={() => setHoveredExpense(g.description)}
-                                    onMouseLeave={() => setHoveredExpense(null)}
-                                    style={{
-                                        background: `${color}10`,
-                                        border: `1px solid ${color}20`,
-                                        cursor: g.count > 1 ? 'pointer' : 'default'
-                                    }}
-                                >
-                                    <div className="flex flex-col flex-1">
-                                        <div className="flex items-center gap-2">
-                                            {g.count > 1 && (
-                                                <span
-                                                    className="text-xs px-2 py-1 rounded-full font-bold"
-                                                    style={{background: color, color: 'var(--background)'}}
-                                                >
-                                                    x{g.count}
-                                                </span>
-                                            )}
-                                            <span className="font-medium">{g.description}</span>
+                        {shown.map((g) => {
+                            const groupKey = `${g.description}__${g.currency}`;
+                            return (
+                                <div key={groupKey}>
+                                    <div
+                                        className="flex justify-between items-center p-4 rounded-lg hover:shadow-md transition-all duration-200 relative"
+                                        onClick={() => g.count > 1 && toggleExpanded(groupKey)}
+                                        onMouseEnter={() => setHoveredExpense(groupKey)}
+                                        onMouseLeave={() => setHoveredExpense(null)}
+                                        style={{
+                                            background: `${color}10`,
+                                            border: `1px solid ${color}20`,
+                                            cursor: g.count > 1 ? 'pointer' : 'default',
+                                        }}
+                                    >
+                                        <div className="flex flex-col flex-1">
+                                            <div className="flex items-center gap-2">
+                                                {g.count > 1 && (
+                                                    <span
+                                                        className="text-xs px-2 py-1 rounded-full font-bold"
+                                                        style={{ background: color, color: 'var(--background)' }}
+                                                    >
+                                                        x{g.count}
+                                                    </span>
+                                                )}
+                                                <span className="font-medium">{g.description}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-xs opacity-60">{formatDate(g.latestDate)}</span>
+                                                {/* Only show source if not stacked */}
+                                                {g.count === 1 && g.origins.size > 0 && (
+                                                    <span className="text-xs" style={{ color }}>
+                                                        {Array.from(g.origins).join(', ')}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-xs opacity-60">{formatDate(g.latestDate)}</span>
-                                            {g.origins.size > 0 && (
-                                                <span className="text-xs" style={{color}}>
-                                                    {Array.from(g.origins).join(', ')} {/* Display all unique origins */}
-                                                </span>
-                                            )}
-                                        </div>
+                                        <span className="font-bold text-lg" style={{ color }}>
+                                            {formatCurrency(g.totalAmount)}
+                                        </span>
+
+                                        {/* Edit and Delete Icons for Singular Expenses */}
+                                        {g.count === 1 && hoveredExpense === groupKey && (
+                                            <div className="absolute right-2 top-2 flex gap-2">
+                                                <Edit
+                                                    className="w-4 h-4 cursor-pointer absolute top-12 right-1/3"
+                                                    style={{ color }}
+                                                    onClick={() => onEdit(g.transactions[0])}
+                                                />
+                                                <Trash2
+                                                    className="w-4 h-4 cursor-pointer absolute top-12 right-9"
+                                                    style={{ color }}
+                                                    onClick={() => onDelete(g.transactions[0])}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
-                                    <span className="font-bold text-lg" style={{color}}>
-                                        {formatCurrency(g.totalAmount)}
-                                    </span>
 
-                                    {/* Edit and Delete Icons for Singular Expenses */}
-                                    {g.count === 1 && hoveredExpense === g.description && (
-                                        <div className="absolute right-2 top-2 flex gap-2">
-                                            <Edit
-                                                className="w-4 h-4 cursor-pointer absolute top-12 right-1/3"
-                                                style={{color}}
-                                                onClick={() => onEdit(g.transactions[0])}
-                                            />
-                                            <Trash2
-                                                className="w-4 h-4 cursor-pointer absolute top-12 right-9"
-                                                style={{color}}
-                                                onClick={() => onDelete(g.transactions[0])}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-
-                                {g.count > 1 && expandedItems.has(g.description) && (
-                                    <div className="ml-6 mt-2 space-y-2">
-                                        {g.transactions
-                                            .sort((a, b) => +new Date(b.date) - +new Date(a.date))
-                                            .map((tr) => {
-                                                const li = getLinkedIncome(tr.id);
-                                                return (
+                                    {g.count > 1 && expandedItems.has(groupKey) && (
+                                        <div className="ml-6 mt-2 space-y-2">
+                                            {g.transactions
+                                                .sort((a, b) => +new Date(b.date) - +new Date(a.date))
+                                                .map((tr) => (
                                                     <div
-                                                        key={tr._id} // Use the unique transaction ID as the key
+                                                        key={tr._id}
                                                         className="flex justify-between items-center p-3 rounded-lg relative"
                                                         style={{
                                                             background: `${color}05`,
-                                                            border: `1px solid ${color}15`
+                                                            border: `1px solid ${color}15`,
                                                         }}
                                                         onMouseEnter={() => setHoveredExpense(tr._id)}
                                                         onMouseLeave={() => setHoveredExpense(null)}
                                                     >
                                                         <div className="flex flex-col flex-1">
                                                             <div className="flex items-center gap-2">
-                                                                <span
-                                                                    className="text-sm font-medium">{tr.description}</span>
-                                                                {li && (
-                                                                    <RotateCcw
-                                                                        className="w-4 h-4"
-                                                                        style={{color}}
-                                                                        aria-label={t('expenseCard.returnedBy', {source: li.source})}
-                                                                    />
-                                                                )}
+                                                                <span className="text-sm font-medium">{tr.description}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <span
-                                                                    className="text-xs opacity-60">{formatDate(tr.date)}</span>
+                                                                <span className="text-xs opacity-60">{formatDate(tr.date)}</span>
                                                                 {tr.source && (
-                                                                    <span className="text-xs" style={{color}}>
+                                                                    <span className="text-xs" style={{ color }}>
                                                                         {tr.source}
-                                                                    </span>
-                                                                )}
-                                                                {li && (
-                                                                    <span className="text-xs opacity-60">
-                                                                        {t('expenseCard.returnedBy', {source: li.source})}
                                                                     </span>
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <span className="font-bold" style={{color}}>
+                                                        <span className="font-bold" style={{ color }}>
                                                             {formatCurrency(tr.amount)}
                                                         </span>
 
@@ -267,12 +252,12 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
                                                             </div>
                                                         )}
                                                     </div>
-                                                );
-                                            })}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
 
                         {groups.length > 5 && (
                             <button
@@ -281,18 +266,18 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
                                 style={{
                                     borderColor: color,
                                     color: color,
-                                    background: `${color}20`
+                                    background: `${color}20`,
                                 }}
                             >
                                 {showAll ? (
                                     <>
-                                        <ChevronUp className="w-4 h-4"/>
+                                        <ChevronUp className="w-4 h-4" />
                                         {t('expenseCard.showLess')}
                                     </>
                                 ) : (
                                     <>
-                                        <ChevronDown className="w-4 h-4"/>
-                                        {t('expenseCard.showMore', {count: groups.length - 5})}
+                                        <ChevronDown className="w-4 h-4" />
+                                        {t('expenseCard.showMore', { count: groups.length - 5 })}
                                     </>
                                 )}
                             </button>

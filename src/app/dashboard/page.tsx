@@ -456,6 +456,8 @@ const DashboardPage = () => {
                             formatCurrency={formatCurrencyWithSettings}
                             formatDate={formatDateWithSettings}
                             t={safeT as TFunction}
+                            onEdit={handleEditTransactionClick}
+                            onDelete={handleDeleteTransaction}
                         />
                     </div>
 

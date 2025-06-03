@@ -1,12 +1,12 @@
 'use client';
 
-import {useSession} from 'next-auth/react';
-import {useRouter} from 'next/navigation';
-import {useEffect, useState} from 'react';
-import {useTheme} from 'next-themes';
-import {toast} from 'react-hot-toast';
-import {getTranslation} from '@/app/i18n';
-import {TFunction} from 'i18next';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useTheme } from 'next-themes';
+import { toast } from 'react-hot-toast';
+import { getTranslation } from '@/app/i18n';
+import { TFunction } from 'i18next';
 import CustomButton from '@/app/components/buttons/CustomButton';
 import {
     User,
@@ -20,7 +20,7 @@ import {
     Trash2,
     Save,
 } from 'lucide-react';
-import {Locale} from "@/app/i18n/settings";
+import { Locale } from "@/app/i18n/settings";
 
 interface UserSettings {
     defaultCurrency: 'PLN' | 'USD' | 'EUR' | 'GBP';
@@ -42,9 +42,9 @@ interface UserSettings {
 }
 
 const SettingsPage = () => {
-    const {data: session, status} = useSession();
+    const { data: session, status } = useSession();
     const router = useRouter();
-    const {theme, setTheme} = useTheme();
+    const { theme, setTheme } = useTheme();
     const [settings, setSettings] = useState<UserSettings>({
         defaultCurrency: 'PLN',
         preferredDateFormat: 'DD/MM/YYYY',
@@ -72,20 +72,17 @@ const SettingsPage = () => {
     useEffect(() => {
         const initTranslation = async () => {
             try {
-                const {t: translate} = await getTranslation(
+                const { t: translate } = await getTranslation(
                     settings.language as Locale,
                     'translation'
                 );
                 setT(() => translate);
             } catch (error) {
                 console.error('Failed to load translations:', error);
-                // Set a fallback function that returns the key if translation fails
                 setT(() => ((key: string) => key) as TFunction);
             }
         };
-        // Call initTranslation and handle the promise explicitly
-        initTranslation().then(() => {
-        });
+        initTranslation();
     }, [settings.language]);
 
     // Sync settings.preferredTheme with the actual theme from useTheme
@@ -99,41 +96,40 @@ const SettingsPage = () => {
     }, [theme, settings.preferredTheme]);
 
     // Fetch user settings from API
-    const fetchSettings = async () => {
-        if (!session?.user?.id) return;
-
-        try {
-            const response = await fetch(`/api/users/${session.user.id}/settings`);
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                setSettings(data.settings);
-                setCustomNameDraft(data.settings.customName || '');
-                if (data.settings.preferredTheme !== theme) {
-                    setTheme(data.settings.preferredTheme);
-                }
-            } else {
-                toast.error(
-                    t?.('settings.messages.fetchError') || 'Failed to fetch settings'
-                );
-            }
-        } catch (error) {
-            console.error('Error fetching settings:', error);
-            toast.error(
-                t?.('settings.messages.fetchError') || 'Failed to fetch settings'
-            );
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     useEffect(() => {
         if (status === 'unauthenticated') {
             router.replace('/');
         } else if (status === 'authenticated' && session?.user) {
+            const fetchSettings = async () => {
+                if (!session?.user?.id) return;
+
+                try {
+                    const response = await fetch(`/api/users/${session.user.id}/settings`);
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        setSettings(data.settings);
+                        setCustomNameDraft(data.settings.customName || '');
+                        if (data.settings.preferredTheme !== theme) {
+                            setTheme(data.settings.preferredTheme);
+                        }
+                    } else {
+                        toast.error(
+                            t?.('settings.messages.fetchError') || 'Failed to fetch settings'
+                        );
+                    }
+                } catch (error) {
+                    console.error('Error fetching settings:', error);
+                    toast.error(
+                        t?.('settings.messages.fetchError') || 'Failed to fetch settings'
+                    );
+                } finally {
+                    setIsLoading(false);
+                }
+            };
             fetchSettings();
         }
-    }, [status, session, router]);
+    }, [status, session, router, theme, t, setTheme]);
 
     // Helper to update a single field instantly (except customName)
     const updateSetting = async (update: Partial<UserSettings>) => {
@@ -142,7 +138,7 @@ const SettingsPage = () => {
         try {
             const response = await fetch(`/api/users/${session.user.id}/settings`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(update),
             });
             const data = await response.json();
@@ -180,8 +176,8 @@ const SettingsPage = () => {
         try {
             const response = await fetch(`/api/users/${session.user.id}/settings`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({customName: customNameDraft}),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customName: customNameDraft }),
             });
             const data = await response.json();
 
@@ -190,7 +186,7 @@ const SettingsPage = () => {
                     t?.('settings.messages.updateError') || 'Failed to save display name'
                 );
             } else {
-                setSettings((prev) => ({...prev, customName: customNameDraft}));
+                setSettings((prev) => ({ ...prev, customName: customNameDraft }));
                 toast.success(
                     t?.('settings.profile.displayNameSaved') ||
                     'Display name saved successfully!'
@@ -210,7 +206,7 @@ const SettingsPage = () => {
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
-        const {name, value, type} = e.target;
+        const { name, value, type } = e.target;
 
         if (name === 'customName') {
             setCustomNameDraft(value);
@@ -231,8 +227,8 @@ const SettingsPage = () => {
                                 ? parseFloat(value) || 0
                                 : value;
 
-                    const updatedParent = {...currentParent, [child]: newValue};
-                    const updatedSettings = {...prev, [parentKey]: updatedParent};
+                    const updatedParent = { ...currentParent, [child]: newValue };
+                    const updatedSettings = { ...prev, [parentKey]: updatedParent };
                     updateSetting({
                         [parentKey]: updatedParent,
                     } as Partial<UserSettings>);
@@ -248,17 +244,17 @@ const SettingsPage = () => {
                         ? parseFloat(value) || 0
                         : value;
 
-            const updatedSettings = {...settings, [name]: newValue};
+            const updatedSettings = { ...settings, [name]: newValue };
             setSettings(updatedSettings);
-            updateSetting({[name]: newValue} as Partial<UserSettings>);
+            updateSetting({ [name]: newValue } as Partial<UserSettings>);
         }
     };
 
     // Handle theme change instantly
     const handleThemeChange = (newTheme: 'light' | 'dark') => {
         setTheme(newTheme);
-        setSettings((prev) => ({...prev, preferredTheme: newTheme}));
-        updateSetting({preferredTheme: newTheme});
+        setSettings((prev) => ({ ...prev, preferredTheme: newTheme }));
+        updateSetting({ preferredTheme: newTheme });
     };
 
     const handleExportData = () => {
@@ -299,7 +295,6 @@ const SettingsPage = () => {
             </div>
         );
     }
-
     return (
         <div className="bg-[var(--background)] text-[var(--text)] pt-20">
             <div className="container mx-auto px-4 max-w-4xl">
