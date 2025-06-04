@@ -83,7 +83,7 @@ export const deleteTransaction = async (
             return false;
         }
 
-        console.log('Transaction deleted successfully:', data.message);
+        // console.log('Transaction deleted successfully:', data.message);
         return true;
     } catch (error) {
         console.error('Error deleting transaction:', error);

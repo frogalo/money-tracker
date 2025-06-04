@@ -38,7 +38,7 @@ export async function GET(
     try {
         // Await params before using
         const { userId } = await params;
-        console.log('GET request for userId:', userId); // Debug log
+        // console.log('GET request for userId:', userId); // Debug log
 
         const session = await getServerSession(authOptions);
 
@@ -105,7 +105,7 @@ export async function POST(
     try {
         // Await params before using
         const { userId } = await params;
-        console.log('POST request for userId:', userId); // Debug log
+        // console.log('POST request for userId:', userId); // Debug log
 
         const session = await getServerSession(authOptions);
 

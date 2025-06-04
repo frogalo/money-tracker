@@ -258,7 +258,7 @@ const SettingsPage = () => {
     };
 
     const handleExportData = () => {
-        console.log('Exporting data...');
+        // console.log('Exporting data...');
         alert(
             t?.('settings.messages.exportStarted') ||
             'Data export started. You will receive an email when ready.'
@@ -272,7 +272,7 @@ const SettingsPage = () => {
                 'Are you sure you want to delete your account? This action cannot be undone.'
             )
         ) {
-            console.log('Deleting account...');
+            // console.log('Deleting account...');
             alert(
                 t?.('settings.messages.deleteInitiated') ||
                 'Account deletion initiated.'

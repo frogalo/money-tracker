@@ -80,9 +80,9 @@ const DashboardPage = () => {
     };
 
     const handleEditTransactionClick = (transaction: Transaction) => {
-        console.log('Editing transaction:', transaction); // Debug log
+        // console.log('Editing transaction:', transaction); // Debug log
         const transactionWithId = ensureTransactionId(transaction);
-        console.log('Transaction with ID:', transactionWithId); // Debug log
+        // console.log('Transaction with ID:', transactionWithId); // Debug log
         setEditingTransaction(transactionWithId);
         setIsModalOpen(true);
     };
@@ -107,7 +107,7 @@ const DashboardPage = () => {
                     throw new Error('Transaction ID is missing');
                 }
 
-                console.log('Updating transaction with ID:', transactionId); // Debug log
+                // console.log('Updating transaction with ID:', transactionId); // Debug log
 
                 // PUT to API - Update existing transaction
                 const response = await fetch(
@@ -164,7 +164,7 @@ const DashboardPage = () => {
                     id: data.id || data.transaction?.id || data.transaction?._id?.toString()
                 });
 
-                console.log('Created new transaction:', newTransaction); // Debug log
+                // console.log('Created new transaction:', newTransaction); // Debug log
 
                 if (transaction.type === 'expense') {
                     setExpenses((prev) => [
@@ -201,7 +201,7 @@ const DashboardPage = () => {
             return;
         }
 
-        console.log('Deleting transaction with ID:', transactionId); // Debug log
+        // console.log('Deleting transaction with ID:', transactionId); // Debug log
         setIsLoading(true);
 
         try {
