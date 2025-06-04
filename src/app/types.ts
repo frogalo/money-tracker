@@ -51,7 +51,7 @@ export type IncomeCategory =
     | 'Investment'
     | 'Gift'
     | 'Refund'
-    | 'Other'; // These are more for the 'category' field on income
+    | 'Other';
 
 export type TransactionRequestBody = {
     type: 'income' | 'expense';
@@ -59,9 +59,7 @@ export type TransactionRequestBody = {
     currency: Currency;
     date: string;
     description: string;
-    // For expense:
-    category?: ExpenseCategory;
-    // For income:
+    category?: ExpenseCategory | IncomeSourceType;
     incomeType?: IncomeSourceType;
     source?: string;
     returnPercentage?: number;
